@@ -11,4 +11,5 @@ router.get('/', (req, res) =>{
     })
 })
 
-route.use('/funcionarios', funcionarioRoutes)
+route.use('/funcionario', funcionarioRoutes)
+route.use('/categoria', categoriaRoutes)
