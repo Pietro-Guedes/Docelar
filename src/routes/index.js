@@ -1,7 +1,12 @@
 const express = require('express')
 const router = express.Router()
 
-const funcionarioRoutesRoutes = require('./FuncionarioRoutes')
+const funcionarioRoutes = require('./FuncionarioRoutes')
+const categoriaRoutes = require('./CategoriaRoutes')
+const estoqueRoutes = require('./EstoqueRoutes')
+const cadastrofornecedoresRoutes = require('./CadastroFornecedoresRoutes')
+const produtoRoutes = require('./ProdutoRoutes')
+const movimentacaoestoqueRoutes = require('./MovimentacaoEstoqueRoutes')
 
 router.get('/', (req, res) =>{
     res.json({
@@ -13,3 +18,7 @@ router.get('/', (req, res) =>{
 
 route.use('/funcionario', funcionarioRoutes)
 route.use('/categoria', categoriaRoutes)
+route.use('/estoque', estoqueRoutes)
+route.use('/cadastrofornecedroes', cadastrofornecedoresRoutes)
+route.use('/produtos', produtoRoutes)
+route.use('/movimentacaoestoque', movimentacaoestoqueRoutes)
