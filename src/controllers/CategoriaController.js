@@ -6,6 +6,7 @@ class CategoriaController {
             const resultado = await CategoriaService.listarCategoria();
             res.json(resultado);
         } catch (erro) {
+            console.error(erro)
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
@@ -15,6 +16,7 @@ class CategoriaController {
             const resultado = await CategoriaService.buscarCategoriaPorId(req.params.id);
             res.json(resultado);
         } catch (erro) {
+            console.error(erro)
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
@@ -24,6 +26,7 @@ class CategoriaController {
             const resultado = await CategoriaService.cadastrarCategoria(req.body);
             res.status(201).json(resultado);
         } catch (erro) {
+            console.error(erro)
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
@@ -33,6 +36,7 @@ class CategoriaController {
             const resultado = await CategoriaService.atualizarCategoria(req.params.id, req.body);
             res.json(resultado);
         } catch (erro) {
+            console.error(erro)
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
@@ -42,6 +46,7 @@ class CategoriaController {
             const resultado = await CategoriaService.deletarCategoria(req.params.id);
             res.json(resultado);
         } catch (erro) {
+            console.error(erro)
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }

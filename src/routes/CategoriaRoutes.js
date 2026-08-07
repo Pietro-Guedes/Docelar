@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const CategoriaController = require('../controllers/CategoriaController');
-const categoriaController = new CategoriaController();
+const categoriaController = require('../controllers/CategoriaController');
+
 
 router.get('/', categoriaController.listar);
 router.get('/:id', categoriaController.buscarPorId);

@@ -22,7 +22,7 @@ class MovimentacaoEstoqueService {
 
         const { id_estoque } = await EstoqueService.criarLote({ id_produto, id_fornecedor, quantidade, validade });
 
-        const id_movimentacao = await MovimentacaoRepository.create({
+        const id_movimentacao = await MovimentacaoEstoqueRepository.create({
             tipo: 'ENTRADA',
             quantidade,
             valor_unitario: valor_unitario || null,

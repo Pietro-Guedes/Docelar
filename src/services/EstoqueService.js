@@ -1,7 +1,8 @@
 const EstoqueRepository = require('../repositories/EstoqueRepository');
+const ProdutoRepository = require('../repositories/ProdutoRepository');
 
 class EstoqueService {
-    async listarProdutos() {
+    async listarEstoque() {
         const estoque = await EstoqueRepository.findAll();
         return { sucesso: true, dados: estoque, total: estoque.length };
     }
@@ -9,82 +10,76 @@ class EstoqueService {
     async buscarEstoquePorId(id) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
         const estoque = await EstoqueRepository.findById(id);
-        if (!produto) throw { status: 404, mensagem: "Estoque não encontrado" };
+        if (!estoque) throw { status: 404, mensagem: "Lote não encontrado" };
         return { sucesso: true, dados: estoque };
     }
 
     async cadastrarEstoque(dados) {
-        const { quantidade, validade, data_entrada, id_produto, id_funcionario } = dados;
+        const { id_produto, id_fornecedor, quantidade, validade } = dados;
 
-        if (!nome || !descricao || valor_unitario === undefined) {
-            throw { status: 400, mensagem: "Nome, descrição e valor unitário são obrigatórios" };
-        }
-        if (typeof valor_unitario !== "number" || valor_unitario < 0) {
-            throw { status: 400, mensagem: "Valor unitário deve ser um número positivo" };
-        }
-        if (id_categoria !== undefined && id_categoria !== null && isNaN(id_categoria)) {
-            throw { status: 400, mensagem: "Categoria inválida" };
-        }
-        if (id_fornecedor !== undefined && id_fornecedor !== null && isNaN(id_fornecedor)) {
-            throw { status: 400, mensagem: "Fornecedor inválido" };
-        }
-        if (!id_funcionario || isNaN(id_funcionario)) {
-            throw { status: 400, mensagem: "Funcionário responsável pelo cadastro é obrigatório" };
+        if (!id_produto || isNaN(id_produto)) throw { status: 400, mensagem: "Produto é obrigatório" };
+        if (typeof quantidade !== "number" || quantidade <= 0) {
+            throw { status: 400, mensagem: "Quantidade deve ser um número positivo" };
         }
 
-        const novoProduto = {
-            nome: nome.trim(),
-            descricao: descricao.trim(),
-            valor_unitario,
-            id_categoria: id_categoria || null,
+        const produto = await ProdutoRepository.findById(id_produto);
+        if (!produto) throw { status: 404, mensagem: "Produto não encontrado" };
+
+        const novoLote = {
+            id_produto,
             id_fornecedor: id_fornecedor || null,
-            id_funcionario
+            quantidade,
+            validade: validade || null
         };
 
-        const id = await ProdutoRepository.create(novoProduto);
-        return { sucesso: true, mensagem: "Produto cadastrado com sucesso", id };
+        const id = await EstoqueRepository.create(novoLote);
+        return { sucesso: true, mensagem: "Lote cadastrado com sucesso", id };
     }
 
-    async atualizarProduto(id, dados) {
+    async atualizarEstoque(id, dados) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
 
-        const existe = await ProdutoRepository.findById(id);
-        if (!existe) throw { status: 404, mensagem: "Produto não encontrado" };
+        const existe = await EstoqueRepository.findById(id);
+        if (!existe) throw { status: 404, mensagem: "Lote não encontrado" };
 
         const atualizado = {};
-        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor } = dados;
+        const { quantidade, validade } = dados;
 
-        if (nome !== undefined) atualizado.nome = nome.trim();
-        if (descricao !== undefined) atualizado.descricao = descricao.trim();
-        if (valor_unitario !== undefined) {
-            if (typeof valor_unitario !== "number" || valor_unitario < 0) {
-                throw { status: 400, mensagem: "Valor unitário inválido" };
-            }
-            atualizado.valor_unitario = valor_unitario;
+        if (quantidade !== undefined) {
+            if (typeof quantidade !== "number" || quantidade < 0) throw { status: 400, mensagem: "Quantidade inválida" };
+            atualizado.quantidade = quantidade;
         }
-        if (id_categoria !== undefined) {
-            if (id_categoria !== null && isNaN(id_categoria)) throw { status: 400, mensagem: "Categoria inválida" };
-            atualizado.id_categoria = id_categoria;
-        }
-        if (id_fornecedor !== undefined) {
-            if (id_fornecedor !== null && isNaN(id_fornecedor)) throw { status: 400, mensagem: "Fornecedor inválido" };
-            atualizado.id_fornecedor = id_fornecedor;
-        }
+        if (validade !== undefined) atualizado.validade = validade;
 
         if (Object.keys(atualizado).length === 0) throw { status: 400, mensagem: "Nenhum dado válido" };
 
-        await ProdutoRepository.update(id, atualizado);
-        return { sucesso: true, mensagem: "Produto atualizado com sucesso" };
+        await EstoqueRepository.update(id, atualizado);
+        return { sucesso: true, mensagem: "Lote atualizado com sucesso" };
     }
 
-    async deletarProduto(id) {
+    async deletarEstoque(id) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-        const existe = await ProdutoRepository.findById(id);
-        if (!existe) throw { status: 404, mensagem: "Produto não encontrado" };
+        const existe = await EstoqueRepository.findById(id);
+        if (!existe) throw { status: 404, mensagem: "Lote não encontrado" };
 
-        await ProdutoRepository.delete(id);
-        return { sucesso: true, mensagem: "Produto apagado com sucesso" };
+        await EstoqueRepository.delete(id);
+        return { sucesso: true, mensagem: "Lote apagado com sucesso" };
+    }
+
+    async listarVencidos() {
+        const lotes = await EstoqueRepository.findVencidos();
+        return { sucesso: true, dados: lotes, total: lotes.length };
+    }
+
+    async listarProximosVencimento(dias = 7) {
+        if (isNaN(dias) || dias < 0) throw { status: 400, mensagem: "Número de dias inválido" };
+        const lotes = await EstoqueRepository.findProximosVencimento(dias);
+        return { sucesso: true, dados: lotes, total: lotes.length };
+    }
+
+    async criarLote(dados) {
+        return this.cadastrarEstoque(dados);
     }
 }
 
-module.exports = new ProdutoService();
+module.exports = new EstoqueService();

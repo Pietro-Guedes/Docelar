@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const funcionarioController = require('../controllers/FuncionarioController');
-const funcionarioController = new FuncionarioController();
+
 
 router.get('/', funcionarioController.listar);
 router.get('/:id', funcionarioController.buscarPorId);

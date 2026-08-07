@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const CadastroFornecedoresController = require('../controllers/CadastroFornecedoresController');
-const cadastrofornecedoresController = new CadastroFornecedoresController();
+const cadastrofornecedoresController = require('../controllers/CadastroFornecedoresController');
+
 
 router.get('/', cadastrofornecedoresController.listar);
 router.get('/:id', cadastrofornecedoresController.buscarPorId);

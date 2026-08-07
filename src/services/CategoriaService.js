@@ -1,7 +1,7 @@
 const CategoriaRepository = require('../repositories/CategoriaRepository');
 
 class CategoriaService {
-    async listarCategorias() {
+    async listarCategoria() {
         const categorias = await CategoriaRepository.findAll();
         return { sucesso: true, dados: categorias, total: categorias.length };
     }

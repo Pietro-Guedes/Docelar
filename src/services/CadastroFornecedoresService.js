@@ -1,14 +1,14 @@
 const CadastroFornecedoresRepository = require('../repositories/CadastroFornecedoresRepository');
 
 class CadastroFornecedoresService {
-    async listarCadastrarFornecedores() {
+    async listarCadastroFornecedores() {
         const fornecedores = await CadastroFornecedoresRepository.findAll();
         return { sucesso: true, dados: fornecedores, total: fornecedores.length };
     }
 
     async buscarCadastroFornecedoresPorId(id) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-        const fornecedor = await FornecedorRepository.findById(id);
+        const fornecedor = await CadastroFornecedoresRepository.findById(id);
         if (!fornecedor) throw { status: 404, mensagem: "Fornecedor não encontrado" };
         return { sucesso: true, dados: fornecedor };
     }

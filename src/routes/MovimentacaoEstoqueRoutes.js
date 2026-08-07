@@ -1,13 +1,12 @@
+// MovimentacaoEstoqueRoutes.js
 const express = require('express');
 const router = express.Router();
 
-const MovimentacaoEstoqueController = require('../controllers/MovimentacaoEstoqueController');
-const movimentacaoestoqueController = new MovimentacaoEstoqueController();
+const movimentacaoEstoqueController = require('../controllers/MovimentacaoEstoqueController');
 
-router.get('/', movimentacaoestoqueController.listar);
-router.get('/:id', movimentacaoestoqueController.buscarPorId);
-router.post('/', movimentacaoestoqueController.cadastrar);
-router.put('/:id', movimentacaoestoqueController.atualizar);
-router.delete('/:id', movimentacaoestoqueController.deletar);
+router.get('/produto/:id_produto', movimentacaoEstoqueController.listarPorProduto);
+router.post('/entrada', movimentacaoEstoqueController.entrada);
+router.post('/saida', movimentacaoEstoqueController.saida);
+router.post('/devolucao', movimentacaoEstoqueController.devolucao);
 
 module.exports = router;

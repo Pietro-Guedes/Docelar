@@ -3,7 +3,7 @@ const FuncionarioService = require('../services/FuncionarioService');
 class FuncionarioController {
     async listar(req, res) {
         try {
-            const resultado = await FuncionarioService.listarFuncionario();
+            const resultado = await FuncionarioService.listarFuncionarios();
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });

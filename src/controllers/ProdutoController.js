@@ -3,7 +3,7 @@ const ProdutoService = require('../services/ProdutoService');
 class ProdutoController {
     async listar(req, res) {
         try {
-            const resultado = await EstoqueService.listarProduto();
+            const resultado = await ProdutoService.listarProduto();
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
@@ -12,7 +12,7 @@ class ProdutoController {
 
     async buscarPorId(req, res) {
         try {
-            const resultado = await EstoqueService.buscarProdutoPorId(req.params.id);
+            const resultado = await ProdutoService.buscarProdutoPorId(req.params.id);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
@@ -21,7 +21,7 @@ class ProdutoController {
 
     async cadastrar(req, res) {
         try {
-            const resultado = await EstoqueService.cadastrarProduto(req.body);
+            const resultado = await ProdutoService.cadastrarProduto(req.body);
             res.status(201).json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
@@ -30,7 +30,7 @@ class ProdutoController {
 
     async atualizar(req, res) {
         try {
-            const resultado = await EstoqueService.atualizarProduto(req.params.id, req.body);
+            const resultado = await ProdutoService.atualizarProduto(req.params.id, req.body);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
@@ -39,7 +39,7 @@ class ProdutoController {
 
     async deletar(req, res) {
         try {
-            const resultado = await EstoqueService.deletarProduto(req.params.id);
+            const resultado = await ProdutoService.deletarProduto(req.params.id);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });

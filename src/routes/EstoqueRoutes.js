@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const EstoqueController = require('../controllers/EstoqueController');
-const estoqueController = new EStoqueController();
+const estoqueController = require('../controllers/EstoqueController');
+
 
 router.get('/', estoqueController.listar);
 router.get('/:id', estoqueController.buscarPorId);

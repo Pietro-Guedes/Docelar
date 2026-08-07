@@ -1,46 +1,40 @@
-const MovimentacaoEstoqueService= require('../services/MovimentacaoEstoqueService');
+const MovimentacaoEstoqueService = require('../services/MovimentacaoEstoqueService');
 
 class MovimentacaoEstoqueController {
-    async listar(req, res) {
+    async listarPorProduto(req, res) {
         try {
-            const resultado = await MovimentacaoEstoqueService.listarMovimentacaoEstoque();
+            const resultado = await MovimentacaoEstoqueService.listarMovimentacoesPorProduto(req.params.id_produto);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
 
-    async buscarPorId(req, res) {
+    async entrada(req, res) {
         try {
-            const resultado = await EstoqueService.buscarMovimentacaoEstoquePorId(req.params.id);
-            res.json(resultado);
-        } catch (erro) {
-            res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
-        }
-    }
-
-    async cadastrar(req, res) {
-        try {
-            const resultado = await MovimentacaoEstoqueService.cadastrarMovimentacaoEstoque(req.body);
+            const id_funcionario = req.usuario.id;
+            const resultado = await MovimentacaoEstoqueService.registrarEntrada(req.body, id_funcionario);
             res.status(201).json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
 
-    async atualizar(req, res) {
+    async saida(req, res) {
         try {
-            const resultado = await MovimentacaoEstoqueService.atualizarMovimentacaoEstoque(req.params.id, req.body);
-            res.json(resultado);
+            const id_funcionario = req.usuario.id;
+            const resultado = await MovimentacaoEstoqueService.registrarSaida(req.body, id_funcionario);
+            res.status(201).json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
 
-    async deletar(req, res) {
+    async devolucao(req, res) {
         try {
-            const resultado = await EstoqueService.deletarMovimentacaoEstoque(req.params.id);
-            res.json(resultado);
+            const id_funcionario = req.usuario.id;
+            const resultado = await MovimentacaoEstoqueService.registrarDevolucao(req.body, id_funcionario);
+            res.status(201).json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }

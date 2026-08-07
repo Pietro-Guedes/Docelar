@@ -2,23 +2,23 @@ const pool = require('../config/database');
 
 class ProdutoRepository {
     async findAll() {
-        const [rows] = await pool.query('SELECT * FROM produto ORDER BY id DESC');
+        const [rows] = await pool.query('SELECT * FROM produto ORDER BY id_produto DESC');
         return rows;
     }
 
     async findById(id) {
-        const [rows] = await pool.query('SELECT * FROM produto WHERE id = ?', [id]);
+        const [rows] = await pool.query('SELECT * FROM produto WHERE id_produto = ?', [id]);
         return rows[0];
     }
-     async create(produtoData) {
-        const { nome, descricao, validade, quantidade, valor_unitario, id_categoria, id_fornecedor, id_funcionario } = produtoData;
+
+    async create(produtoData) {
+        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor, id_funcionario } = produtoData;
         const [result] = await pool.query(
-            'INSERT INTO produto (nome, descricao, validade, quantidade, valor_unitario, id_categoria, id_fornecedor, id_funcionario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [nome, descricao, validade, quantidade, valor_unitario, id_categoria, id_fornecedor, id_funcionario]
+            'INSERT INTO produto (nome, descricao, valor_unitario, id_categoria, id_fornecedor, id_funcionario) VALUES (?, ?, ?, ?, ?, ?)',
+            [nome, descricao, valor_unitario, id_categoria, id_fornecedor, id_funcionario]
         );
         return result.insertId;
     }
-
 
     async update(id, produtoData) {
         const fields = [];
@@ -30,13 +30,13 @@ class ProdutoRepository {
         if (fields.length === 0) return null;
 
         values.push(id);
-        const query = `UPDATE produto SET ${fields.join(', ')} WHERE id = ?`;
+        const query = `UPDATE produto SET ${fields.join(', ')} WHERE id_produto = ?`;
         const [result] = await pool.query(query, values);
         return result.affectedRows;
     }
 
     async delete(id) {
-        const [result] = await pool.query('DELETE FROM produto WHERE id = ?', [id]);
+        const [result] = await pool.query('DELETE FROM produto WHERE id_produto = ?', [id]);
         return result.affectedRows;
     }
 }

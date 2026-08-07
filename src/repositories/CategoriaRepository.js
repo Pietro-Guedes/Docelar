@@ -2,23 +2,28 @@ const pool = require('../config/database');
 
 class CategoriaRepository {
     async findAll() {
-        const [rows] = await pool.query('SELECT * FROM produto ORDER BY id DESC');
+        const [rows] = await pool.query('SELECT * FROM categoria ORDER BY id_categoria DESC');
         return rows;
     }
 
     async findById(id) {
-        const [rows] = await pool.query('SELECT * FROM produto WHERE id = ?', [id]);
+        const [rows] = await pool.query('SELECT * FROM categoria WHERE id_categoria = ?', [id]);
         return rows[0];
     }
-     async create(categoriaData) {
+
+    async findByNome(nome) {
+        const [rows] = await pool.query('SELECT * FROM categoria WHERE nome = ?', [nome]);
+        return rows[0];
+    }
+
+    async create(categoriaData) {
         const { nome } = categoriaData;
         const [result] = await pool.query(
-            'INSERT INTO produto (nome) VALUES (?)',
+            'INSERT INTO categoria (nome) VALUES (?)',
             [nome]
         );
         return result.insertId;
     }
-
 
     async update(id, categoriaData) {
         const fields = [];
@@ -28,15 +33,14 @@ class CategoriaRepository {
             values.push(value);
         }
         if (fields.length === 0) return null;
-
         values.push(id);
-        const query = `UPDATE produto SET ${fields.join(', ')} WHERE id = ?`;
+        const query = `UPDATE categoria SET ${fields.join(', ')} WHERE id_categoria = ?`;
         const [result] = await pool.query(query, values);
         return result.affectedRows;
     }
 
     async delete(id) {
-        const [result] = await pool.query('DELETE FROM produto WHERE id = ?', [id]);
+        const [result] = await pool.query('DELETE FROM categoria WHERE id_categoria = ?', [id]);
         return result.affectedRows;
     }
 }
