@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Produto | Docelar</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo">Docelar</span>
+        <small>PANIFICAÇÃO</small>
+      </div>
+      <nav>
+        <a href="index.html"><span class="ic">▦</span>Tela Principal</a>
+        <a href="cadastro-produto.html" class="active"><span class="ic">⊕</span>Cadastro de Produtos</a>
+        <a href="entrada.html"><span class="ic">⇩</span>Entrada de Produtos</a>
+        <a href="estoque.html"><span class="ic">▤</span>Estoque</a>
+        <a href="saida.html"><span class="ic">⇧</span>Saída de Produtos</a>
+        <a href="devolucao.html"><span class="ic">↩</span>Devolução</a>
+        <a href="relatorios.html"><span class="ic">▥</span>Relatórios</a>
+        <a href="perfil.html"><span class="ic">♙</span>Perfil</a>
+      </nav>
+    </aside>
+ 
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Catálogo</div>
+          <h1>Cadastro de Produto</h1>
+        </div>
+        <div class="conn-status">
+          <span class="conn-dot" id="connDot"></span>
+          <span id="connLabel">Verificando conexão com a API...</span>
+        </div>
+      </header>
+ 
+      <div class="content">
+        <form id="formProduto" class="form-shell" novalidate>
+          <div class="panel">
+            <div class="panel-body">
+              <div class="panel-title">Dados do produto</div>
+ 
+              <div class="field" id="fieldNome">
+                <label for="nome">Nome *</label>
+                <input type="text" id="nome" name="nome" maxlength="120" placeholder="Ex.: Pão Francês" />
+                <div class="error-msg">Informe o nome do produto.</div>
+              </div>
+ 
+              <div class="field" id="fieldDescricao">
+                <label for="descricao">Descrição *</label>
+                <textarea id="descricao" name="descricao" placeholder="Detalhes sobre o produto..."></textarea>
+                <div class="error-msg">Informe uma descrição.</div>
+              </div>
+ 
+              <div class="field-row">
+                <div class="field" id="fieldValor">
+                  <label for="valor_unitario">Valor unitário (R$) *</label>
+                  <input type="number" id="valor_unitario" name="valor_unitario" min="0" step="0.01" placeholder="0,00" />
+                  <div class="error-msg">Informe um valor positivo.</div>
+                </div>
+ 
+                <div class="field" id="fieldFuncionario">
+                  <label for="id_funcionario">Cadastrado por *</label>
+                  <select id="id_funcionario" name="id_funcionario">
+                    <option value="">Carregando funcionários...</option>
+                  </select>
+                  <div class="error-msg">Selecione o funcionário responsável.</div>
+                </div>
+              </div>
+ 
+              <div class="field-row">
+                <div class="field" id="fieldCategoria">
+                  <label for="id_categoria">Categoria</label>
+                  <select id="id_categoria" name="id_categoria">
+                    <option value="">Carregando categorias...</option>
+                  </select>
+                  <div class="hint">Opcional.</div>
+                </div>
+ 
+                <div class="field" id="fieldFornecedor">
+                  <label for="id_fornecedor">Fornecedor</label>
+                  <select id="id_fornecedor" name="id_fornecedor">
+                    <option value="">Carregando fornecedores...</option>
+                  </select>
+                  <div class="hint">Opcional.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+ 
+          <div class="panel">
+            <div class="panel-body">
+              <div class="panel-title">Imagem do produto</div>
+ 
+              <label class="tag-drop" id="tagDrop" for="imagemInput">
+                <div class="tag-preview" id="tagPreview">🍞</div>
+                <div class="tag-label" id="tagLabel">Clique ou arraste uma imagem</div>
+                <div class="tag-hint">JPEG, PNG ou WEBP · até 5MB</div>
+              </label>
+              <input type="file" id="imagemInput" class="file-input" accept=".jpg,.jpeg,.png,.webp" />
+              <div class="hint" style="margin-top: 10px;">
+                A imagem é enviada depois que o produto é cadastrado.
+              </div>
+            </div>
+          </div>
+ 
+          <div class="form-actions" style="grid-column: 1 / -1;">
+            <button type="button" class="btn btn-outline" id="btnLimpar">Limpar</button>
+            <button type="submit" class="btn btn-primary" id="btnSalvar">✓ Cadastrar Produto</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+ 
+  <div id="toast" class="toast"></div>
+ 
+  <script src="script/api-template.js"></script>
+  <script src="script/cadastro-produto.js"></script>
+</body>
+</html>
