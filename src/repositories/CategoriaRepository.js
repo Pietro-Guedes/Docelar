@@ -12,14 +12,14 @@ class CategoriaRepository {
     }
 
     async findByNome(nome) {
-        const [rows] = await pool.query('SELECT * FROM categoria WHERE nome = ?', [nome]);
+        const [rows] = await pool.query('SELECT * FROM categoria WHERE nome_categoria = ?', [nome]);
         return rows[0];
     }
 
     async create(categoriaData) {
         const { nome } = categoriaData;
         const [result] = await pool.query(
-            'INSERT INTO categoria (nome) VALUES (?)',
+            'INSERT INTO categoria (nome_categoria) VALUES (?)',
             [nome]
         );
         return result.insertId;
