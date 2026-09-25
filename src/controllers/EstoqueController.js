@@ -45,6 +45,16 @@ class EstoqueController {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
+
+    async listarVencidos(req, res) {
+        const dados = await EstoqueService.listarVencidos()
+        return res.json(dados)
+    }
+
+    async listarProximosVencimento(req, res) {
+        const dados = await EstoqueService.listarProximosVencimento()
+        return res.json(dados)
+    }
 }
 
 module.exports = new EstoqueController();

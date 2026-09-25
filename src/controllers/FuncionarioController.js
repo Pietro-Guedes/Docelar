@@ -45,6 +45,21 @@ class FuncionarioController {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
+
+    async login(req, res) {
+        try {
+            const {email, senha} =req.body
+
+            const resultado = await FuncionarioService.login(email, senha)
+
+            return res.json(resultado)
+        } catch (erro) {
+            return res.status(erro.status || 500).json({
+                sucesso: false,
+                mensagem: erro.mensagem || "Erro interno do servidor"
+            })
+        }
+    }
 }
 
 module.exports = new FuncionarioController();

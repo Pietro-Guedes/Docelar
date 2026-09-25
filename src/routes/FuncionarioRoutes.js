@@ -3,6 +3,8 @@ const router = express.Router();
 
 const funcionarioController = require('../controllers/FuncionarioController');
 
+//rota de login
+router.post('/login', funcionarioController.login)
 
 router.get('/', funcionarioController.listar);
 router.get('/:id', funcionarioController.buscarPorId);
