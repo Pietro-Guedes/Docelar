@@ -55,7 +55,7 @@ class CadastroFornecedoresService {
 
     async deletarCadastroFornecedores(id) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-        const existe = await FornecedorRepository.findById(id);
+        const existe = await CadastroFornecedoresRepository.findById(id);
         if (!existe) throw { status: 404, mensagem: "Fornecedor não encontrado" };
 
         await CadastroFornecedoresRepository.delete(id);

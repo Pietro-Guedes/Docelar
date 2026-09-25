@@ -16,11 +16,12 @@ class EstoqueRepository {
         return rows;
     }
 
-    async findByProdutoOrdenadoPorValidade(id_produto) {
-        const [rows] = await pool.query(
-            'SELECT * FROM estoque WHERE id_produto = ? AND quantidade > 0 ORDER BY validade ASC',
-            [id_produto]
-        );
+    // executor: pool (padrão) ou uma connection já em transação (conn.beginTransaction()).
+    // lock=true adiciona FOR UPDATE, travando as linhas retornadas até o commit/rollback da transação,
+    // evitando que duas saídas concorrentes leiam o mesmo saldo e "vendam" o mesmo estoque duas vezes.
+    async findByProdutoOrdenadoPorValidade(id_produto, executor = pool, lock = false) {
+        const sql = `SELECT * FROM estoque WHERE id_produto = ? AND quantidade > 0 ORDER BY validade ASC${lock ? ' FOR UPDATE' : ''}`;
+        const [rows] = await executor.query(sql, [id_produto]);
         return rows;
     }
 
@@ -39,16 +40,16 @@ class EstoqueRepository {
         return rows;
     }
 
-    async create(estoqueData) {
+    async create(estoqueData, executor = pool) {
         const { quantidade, validade, id_produto, id_fornecedor } = estoqueData;
-        const [result] = await pool.query(
+        const [result] = await executor.query(
             'INSERT INTO estoque (quantidade, validade, id_produto, id_fornecedor) VALUES (?, ?, ?, ?)',
             [quantidade, validade, id_produto, id_fornecedor]
         );
         return result.insertId;
     }
 
-    async update(id, estoqueData) {
+    async update(id, estoqueData, executor = pool) {
         const fields = [];
         const values = [];
         for (const [key, value] of Object.entries(estoqueData)) {
@@ -59,7 +60,7 @@ class EstoqueRepository {
 
         values.push(id);
         const query = `UPDATE estoque SET ${fields.join(', ')} WHERE id_estoque = ?`;
-        const [result] = await pool.query(query, values);
+        const [result] = await executor.query(query, values);
         return result.affectedRows;
     }
 

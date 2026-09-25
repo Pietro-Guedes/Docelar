@@ -20,7 +20,7 @@ router.get('/', (req, res) =>{
 router.use('/funcionario', funcionarioRoutes)
 router.use('/categoria', categoriaRoutes)
 router.use('/estoque', estoqueRoutes)
-router.use('/cadastrofornecedroes', cadastrofornecedoresRoutes)
+router.use('/cadastrofornecedores', cadastrofornecedoresRoutes)
 router.use('/produtos', produtoRoutes)
 router.use('/movimentacaoestoque', movimentacaoestoqueRoutes)
 router.use('/imagens', imagemRoutes)

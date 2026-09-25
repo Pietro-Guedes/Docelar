@@ -14,7 +14,9 @@ class EstoqueService {
         return { sucesso: true, dados: estoque };
     }
 
-    async cadastrarEstoque(dados) {
+    // executor opcional: permite chamar dentro de uma transação já aberta por outro service
+    // (ex.: MovimentacaoEstoqueService.registrarEntrada), para que o INSERT do lote entre no mesmo commit/rollback.
+    async cadastrarEstoque(dados, executor) {
         const { id_produto, id_fornecedor, quantidade, validade } = dados;
 
         if (!id_produto || isNaN(id_produto)) throw { status: 400, mensagem: "Produto é obrigatório" };
@@ -32,7 +34,9 @@ class EstoqueService {
             validade: validade || null
         };
 
-        const id = await EstoqueRepository.create(novoLote);
+        const id = executor
+            ? await EstoqueRepository.create(novoLote, executor)
+            : await EstoqueRepository.create(novoLote);
         return { sucesso: true, mensagem: "Lote cadastrado com sucesso", id };
     }
 
@@ -77,8 +81,8 @@ class EstoqueService {
         return { sucesso: true, dados: lotes, total: lotes.length };
     }
 
-    async criarLote(dados) {
-        return this.cadastrarEstoque(dados);
+    async criarLote(dados, executor) {
+        return this.cadastrarEstoque(dados, executor);
     }
 }
 
