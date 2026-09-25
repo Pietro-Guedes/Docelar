@@ -30,58 +30,7 @@ class FuncionarioService {
     const emailExiste = await FuncionarioRepository.findByEmail(email);
     if (emailExiste) throw { status: 409, mensagem: "Email já cadastrado" };
 
-<<<<<<< HEAD
     const senha_hash = await bcrypt.hash(senha, 10);
-=======
-    //metodo de login com autenticação jwt
-    async login(email, senha) {
-        if (!email || !senha) {
-            throw {status: 400, 
-                mensagem: "Email e senha são obrigatórios"
-            }
-        }
-
-        //idendifica o funcionario pelo email registrado
-        const funcionario = await FuncionarioRepository.findByEmail(email.trim().toLowerCase())
-        if (!funcionario) {
-            throw {status: 401,
-                 mensagem: "Credenciais inválidas"
-                }
-        }
-
-        //compara a senha informad com o hash salvo do banco
-        const senhaValida = await bcrypt.compare(senha, funcionario.senha_hash)
-        if (!senhaValida) {
-            throw {
-                status: 401,
-                mensagem: "Credenciais inválidas"
-            }
-        }
-
-        //gera o token com o id que será usado pelo funcionario, com uma duração de 8horas
-        const token = jwt.sign(
-            {id: funcionario.id, email: funcionario.email, nome: funcionario.nome }, JWT_SECRET, {expiresIn: '8h'} 
-        )
-
-        const {senha_hash, ...semSenha} = funcionario
-
-        return {
-            sucesso: true,
-            mensagem: "Login realizado com sucesso", 
-            token,
-            usuario: semSenha
-        }
-    }
-
-    async cadastrarFuncionario(dados) {
-        const { nome, email, senha } = dados;
-        if (!nome || !email || !senha) {
-            throw { status: 400, mensagem: "Nome, email e senha são obrigatórios" };
-        }
-        if (senha.length < 6) {
-            throw { status: 400, mensagem: "Senha deve ter no mínimo 6 caracteres" };
-        }
->>>>>>> 2db61e85edae4a35697288d96896dda5c407764a
 
     const novoFuncionario = {
       nome: nome.trim(),
