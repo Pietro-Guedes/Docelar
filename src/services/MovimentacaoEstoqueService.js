@@ -1,6 +1,7 @@
 const MovimentacaoEstoqueRepository = require('../repositories/MovimentacaoEstoqueRepository');
 const EstoqueRepository = require('../repositories/EstoqueRepository');
 const EstoqueService = require('./EstoqueService');
+const pool = require('../config/database');
 
 class MovimentacaoEstoqueService {
     async listarMovimentacoesPorProduto(id_produto) {
@@ -20,19 +21,34 @@ class MovimentacaoEstoqueService {
             throw { status: 400, mensagem: "Quantidade deve ser um número positivo" };
         }
 
-        const { id_estoque } = await EstoqueService.criarLote({ id_produto, id_fornecedor, quantidade, validade });
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
 
-        const id_movimentacao = await MovimentacaoEstoqueRepository.create({
-            tipo: 'ENTRADA',
-            quantidade,
-            valor_unitario: valor_unitario || null,
-            motivo_devolucao: null,
-            observacao: observacao || null,
-            id_estoque,
-            id_funcionario
-        });
+            // Observação: cadastrarEstoque devolve o id do lote no campo "id" (não "id_estoque").
+            const { id: id_estoque } = await EstoqueService.criarLote(
+                { id_produto, id_fornecedor, quantidade, validade },
+                conn
+            );
 
-        return { sucesso: true, mensagem: "Entrada registrada com sucesso", id_movimentacao, id_estoque };
+            const id_movimentacao = await MovimentacaoEstoqueRepository.create({
+                tipo: 'ENTRADA',
+                quantidade,
+                valor_unitario: valor_unitario || null,
+                motivo_devolucao: null,
+                observacao: observacao || null,
+                id_estoque,
+                id_funcionario
+            }, conn);
+
+            await conn.commit();
+            return { sucesso: true, mensagem: "Entrada registrada com sucesso", id_movimentacao, id_estoque };
+        } catch (erro) {
+            await conn.rollback();
+            throw erro;
+        } finally {
+            conn.release();
+        }
     }
 
     // SAIDA: distribui a quantidade entre lotes existentes, do que vence primeiro pro que vence por último (FEFO)
@@ -47,37 +63,53 @@ class MovimentacaoEstoqueService {
             throw { status: 400, mensagem: "Funcionário é obrigatório" };
         }
 
-        const lotes = await EstoqueRepository.findByProdutoOrdenadoPorValidade(id_produto);
-        const saldoTotal = lotes.reduce((soma, lote) => soma + lote.quantidade, 0);
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
 
-        if (saldoTotal < quantidade) {
-            throw { status: 400, mensagem: `Saldo insuficiente. Disponível: ${saldoTotal}` };
+            // lock=true -> SELECT ... FOR UPDATE: trava os lotes lidos até o commit/rollback,
+            // impedindo que duas saídas concorrentes consumam o mesmo saldo (overselling).
+            const lotes = await EstoqueRepository.findByProdutoOrdenadoPorValidade(id_produto, conn, true);
+            const saldoTotal = lotes.reduce((soma, lote) => soma + lote.quantidade, 0);
+
+            if (saldoTotal < quantidade) {
+                throw { status: 400, mensagem: `Saldo insuficiente. Disponível: ${saldoTotal}` };
+            }
+
+            let restante = quantidade;
+            const movimentacoesGeradas = [];
+
+            for (const lote of lotes) {
+                if (restante <= 0) break;
+                if (lote.quantidade <= 0) continue;
+
+                const consumida = Math.min(lote.quantidade, restante);
+
+                // Baixa a quantidade do lote. Sem isso o saldo nunca diminuía de fato.
+                await EstoqueRepository.update(lote.id_estoque, { quantidade: lote.quantidade - consumida }, conn);
+
+                const id_movimentacao = await MovimentacaoEstoqueRepository.create({
+                    tipo: 'SAIDA',
+                    quantidade: consumida,
+                    valor_unitario: null,
+                    motivo_devolucao: null,
+                    observacao: observacao || null,
+                    id_estoque: lote.id_estoque,
+                    id_funcionario
+                }, conn);
+
+                movimentacoesGeradas.push({ id_movimentacao, id_estoque: lote.id_estoque, quantidade: consumida });
+                restante -= consumida;
+            }
+
+            await conn.commit();
+            return { sucesso: true, mensagem: "Saída registrada com sucesso", movimentacoes: movimentacoesGeradas };
+        } catch (erro) {
+            await conn.rollback();
+            throw erro;
+        } finally {
+            conn.release();
         }
-
-        let restante = quantidade;
-        const movimentacoesGeradas = [];
-
-        for (const lote of lotes) {
-            if (restante <= 0) break;
-            if (lote.quantidade <= 0) continue;
-
-            const consumida = Math.min(lote.quantidade, restante);
-
-            const id_movimentacao = await MovimentacaoEstoqueRepository.create({
-                tipo: 'SAIDA',
-                quantidade: consumida,
-                valor_unitario: null,
-                motivo_devolucao: null,
-                observacao: observacao || null,
-                id_estoque: lote.id_estoque,
-                id_funcionario
-            });
-
-            movimentacoesGeradas.push({ id_movimentacao, id_estoque: lote.id_estoque, quantidade: consumida });
-            restante -= consumida;
-        }
-
-        return { sucesso: true, mensagem: "Saída registrada com sucesso", movimentacoes: movimentacoesGeradas };
     }
 
     // DEVOLUCAO: sempre referente a um lote específico (o cliente devolveu algo que saiu de um lote conhecido)
