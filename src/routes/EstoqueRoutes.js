@@ -3,6 +3,9 @@ const router = express.Router();
 
 const estoqueController = require('../controllers/EstoqueController');
 
+//rotas especificas
+router.get('/', estoqueController.listarVencidos)
+router.get('/', estoqueController.listarProximosVencimento)
 
 router.get('/', estoqueController.listar);
 router.get('/:id', estoqueController.buscarPorId);
