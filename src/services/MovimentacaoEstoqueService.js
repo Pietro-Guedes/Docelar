@@ -56,6 +56,8 @@ class MovimentacaoEstoqueService {
     }
 
     // SAIDA: distribui a quantidade entre lotes existentes, do que vence primeiro pro que vence por último (FEFO)
+<<<<<<< HEAD
+=======
     async registrarEntrada(dados, id_funcionario) {
         const { id_produto, id_fornecedor, quantidade, valor_unitario, validade, observacao } = dados;
 
@@ -97,6 +99,7 @@ class MovimentacaoEstoqueService {
     }
 
     // SAIDA: distribui a quantidade entre lotes existentes (FEFO) e atualiza o saldo de cada lote
+>>>>>>> 886fe01206c63985fdc0cf66ebf230f4a0176173
     async registrarSaida(dados, id_funcionario) {
         const { id_produto, quantidade, observacao } = dados;
 
@@ -124,6 +127,10 @@ class MovimentacaoEstoqueService {
             let restante = quantidade;
             const movimentacoesGeradas = [];
 
+<<<<<<< HEAD
+            const consumida = Math.min(lote.quantidade, restante);
+
+=======
             for (const lote of lotes) {
                 if (restante <= 0) break;
                 if (lote.quantidade <= 0) continue;
@@ -134,6 +141,7 @@ class MovimentacaoEstoqueService {
                 await EstoqueRepository.update(lote.id_estoque, { quantidade: lote.quantidade - consumida }, conn);
 
                 // 2. Registra a movimentação de saída
+>>>>>>> 886fe01206c63985fdc0cf66ebf230f4a0176173
             const id_movimentacao = await MovimentacaoEstoqueRepository.create({
                     tipo: 'SAIDA',
                     quantidade: consumida,
@@ -157,7 +165,7 @@ class MovimentacaoEstoqueService {
             conn.release();
         }
     }
-    
+
     // DEVOLUCAO: sempre referente a um lote específico (o cliente devolveu algo que saiu de um lote conhecido)
     async registrarDevolucao(dados, id_funcionario) {
         const { id_estoque, quantidade, motivo_devolucao, observacao } = dados;
