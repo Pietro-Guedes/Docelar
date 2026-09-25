@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const ImagemRepository = require('../repositories/ImagemRepository');
 const ProdutoRepository = require('../repositories/ProdutoRepository');
 
@@ -22,13 +24,29 @@ class ImagemService {
     }
 
     async deletarImagem(id) {
-        if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-        const existe = await ImagemRepository.findById(id);
-        if (!existe) throw { status: 404, mensagem: "Imagem não encontrada" };
 
-        await ImagemRepository.delete(id);
-        return { sucesso: true, mensagem: "Imagem apagada com sucesso" };
-    }
+    if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
+
+    const existe = await ImagemRepository.findById(id);
+
+    if (!existe) throw { status: 404, mensagem: "Imagem não encontrada" };
+
+    await ImagemRepository.delete(id);
+
+    const caminhoArquivo = path.join(
+        __dirname,
+        "..",
+        existe.link.replace(/^\/+/, "")
+    );
+
+    fs.unlink(caminhoArquivo, (erro) => {
+        if (erro) {
+            console.error("Erro ao apagar arquivo:", erro);
+        }
+    });
+
+    return { sucesso: true, mensagem: "Imagem apagada com sucesso" };
+}
 }
 
 module.exports = new ImagemService();
