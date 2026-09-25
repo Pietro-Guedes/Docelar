@@ -12,7 +12,13 @@ class MovimentacaoEstoqueController {
 
     async entrada(req, res) {
         try {
-            const id_funcionario = req.usuario.id;
+            // Tenta obter de req.usuario se existir middleware futuro, ou direto do body
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+
             const resultado = await MovimentacaoEstoqueService.registrarEntrada(req.body, id_funcionario);
             res.status(201).json(resultado);
         } catch (erro) {
@@ -22,7 +28,12 @@ class MovimentacaoEstoqueController {
 
     async saida(req, res) {
         try {
-            const id_funcionario = req.usuario.id;
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+
             const resultado = await MovimentacaoEstoqueService.registrarSaida(req.body, id_funcionario);
             res.status(201).json(resultado);
         } catch (erro) {
@@ -32,7 +43,12 @@ class MovimentacaoEstoqueController {
 
     async devolucao(req, res) {
         try {
-            const id_funcionario = req.usuario.id;
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+
             const resultado = await MovimentacaoEstoqueService.registrarDevolucao(req.body, id_funcionario);
             res.status(201).json(resultado);
         } catch (erro) {

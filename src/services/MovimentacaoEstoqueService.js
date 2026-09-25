@@ -36,32 +36,6 @@ class MovimentacaoEstoqueService {
     }
 
     // SAIDA: distribui a quantidade entre lotes existentes, do que vence primeiro pro que vence por último (FEFO)
-    async registrarEntrada(dados, id_funcionario) {
-        const { id_produto, id_fornecedor, quantidade, valor_unitario, validade, observacao } = dados;
-
-        if (!id_funcionario || isNaN(id_funcionario)) {
-            throw { status: 400, mensagem: "Funcionário é obrigatório" };
-        }
-        if (typeof quantidade !== "number" || quantidade <= 0) {
-            throw { status: 400, mensagem: "Quantidade deve ser um número positivo" };
-        }
-
-        const { id_estoque } = await EstoqueService.criarLote({ id_produto, id_fornecedor, quantidade, validade });
-
-        const id_movimentacao = await MovimentacaoEstoqueRepository.create({
-            tipo: 'ENTRADA',
-            quantidade,
-            valor_unitario: valor_unitario || null,
-            motivo_devolucao: null,
-            observacao: observacao || null,
-            id_estoque,
-            id_funcionario
-        });
-
-        return { sucesso: true, mensagem: "Entrada registrada com sucesso", id_movimentacao, id_estoque };
-    }
-
-    // SAIDA: distribui a quantidade entre lotes existentes (FEFO) e atualiza o saldo de cada lote
     async registrarSaida(dados, id_funcionario) {
         const { id_produto, quantidade, observacao } = dados;
 
@@ -88,12 +62,7 @@ class MovimentacaoEstoqueService {
             if (lote.quantidade <= 0) continue;
 
             const consumida = Math.min(lote.quantidade, restante);
-            const novaQuantidade = lote.quantidade - consumida;
 
-            // 1. Decrementa a quantidade do lote no banco de dados
-            await EstoqueRepository.update(lote.id_estoque, { quantidade: novaQuantidade });
-
-            // 2. Registra a movimentação de saída
             const id_movimentacao = await MovimentacaoEstoqueRepository.create({
                 tipo: 'SAIDA',
                 quantidade: consumida,
@@ -110,7 +79,7 @@ class MovimentacaoEstoqueService {
 
         return { sucesso: true, mensagem: "Saída registrada com sucesso", movimentacoes: movimentacoesGeradas };
     }
-    
+
     // DEVOLUCAO: sempre referente a um lote específico (o cliente devolveu algo que saiu de um lote conhecido)
     async registrarDevolucao(dados, id_funcionario) {
         const { id_estoque, quantidade, motivo_devolucao, observacao } = dados;
