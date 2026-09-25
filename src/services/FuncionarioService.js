@@ -85,7 +85,19 @@ class FuncionarioService {
     const { nome, email, senha } = dados;
 
     if (nome !== undefined) atualizado.nome = nome.trim();
-    if (email !== undefined) atualizado.email = email.trim().toLowerCase();
+    if (nome !== undefined) atualizado.nome = nome.trim();
+    if (email !== undefined) {
+      const emailNormalizado = email.trim().toLowerCase();
+      const emailExiste =
+        await FuncionarioRepository.findByEmail(emailNormalizado);
+      if (emailExiste && Number(emailExiste.id_funcionario) !== Number(id)) {
+        throw {
+          status: 409,
+          mensagem: "Email já cadastrado para outro funcionário",
+        };
+      }
+      atualizado.email = emailNormalizado;
+    }
     if (senha !== undefined) {
       if (senha.length < 6)
         throw {

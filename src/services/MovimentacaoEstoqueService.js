@@ -20,7 +20,7 @@ class MovimentacaoEstoqueService {
             throw { status: 400, mensagem: "Quantidade deve ser um número positivo" };
         }
 
-        const { id_estoque } = await EstoqueService.criarLote({ id_produto, id_fornecedor, quantidade, validade });
+        const { id: id_estoque } = await EstoqueService.criarLote({ id_produto, id_fornecedor, quantidade, validade });
 
         const id_movimentacao = await MovimentacaoEstoqueRepository.create({
             tipo: 'ENTRADA',
