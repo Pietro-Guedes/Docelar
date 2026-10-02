@@ -14,7 +14,7 @@ class ProdutoService {
     }
 
     async cadastrarProduto(dados) {
-        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor, id_funcionario } = dados;
+        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor, id_funcionario, estoque_minimo } = dados;
 
         if (!nome || !descricao || valor_unitario === undefined) {
             throw { status: 400, mensagem: "Nome, descrição e valor unitário são obrigatórios" };
@@ -28,6 +28,9 @@ class ProdutoService {
         if (id_fornecedor !== undefined && id_fornecedor !== null && isNaN(id_fornecedor)) {
             throw { status: 400, mensagem: "Fornecedor inválido" };
         }
+        if (estoque_minimo !== undefined && estoque_minimo !== null && (!Number.isInteger(estoque_minimo) || estoque_minimo < 0)) {
+            throw { status: 400, mensagem: "Estoque mínimo deve ser um número inteiro maior ou igual a zero" };
+        }
         if (!id_funcionario || isNaN(id_funcionario)) {
             throw { status: 400, mensagem: "Funcionário responsável pelo cadastro é obrigatório" };
         }
@@ -40,6 +43,7 @@ class ProdutoService {
             id_fornecedor: id_fornecedor || null,
             id_funcionario
         };
+        if (estoque_minimo !== undefined && estoque_minimo !== null) novoProduto.estoque_minimo = estoque_minimo;
 
         const id = await ProdutoRepository.create(novoProduto);
         return { sucesso: true, mensagem: "Produto cadastrado com sucesso", id };
@@ -52,7 +56,7 @@ class ProdutoService {
         if (!existe) throw { status: 404, mensagem: "Produto não encontrado" };
 
         const atualizado = {};
-        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor } = dados;
+        const { nome, descricao, valor_unitario, id_categoria, id_fornecedor, estoque_minimo } = dados;
 
         if (nome !== undefined) atualizado.nome = nome.trim();
         if (descricao !== undefined) atualizado.descricao = descricao.trim();
@@ -69,6 +73,13 @@ class ProdutoService {
         if (id_fornecedor !== undefined) {
             if (id_fornecedor !== null && isNaN(id_fornecedor)) throw { status: 400, mensagem: "Fornecedor inválido" };
             atualizado.id_fornecedor = id_fornecedor;
+        }
+
+        if (estoque_minimo !== undefined && estoque_minimo !== null) {
+            if (!Number.isInteger(estoque_minimo) || estoque_minimo < 0) {
+                throw { status: 400, mensagem: "Estoque mínimo deve ser um número inteiro maior ou igual a zero" };
+            }
+            atualizado.estoque_minimo = estoque_minimo;
         }
 
         if (Object.keys(atualizado).length === 0) throw { status: 400, mensagem: "Nenhum dado válido" };
