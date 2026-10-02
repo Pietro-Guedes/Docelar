@@ -7,7 +7,7 @@ const estoqueRoutes = require('./EstoqueRoutes')
 const cadastrofornecedoresRoutes = require('./CadastroFornecedoresRoutes')
 const produtoRoutes = require('./ProdutoRoutes')
 const movimentacaoestoqueRoutes = require('./MovimentacaoEstoqueRoutes')
-const imagemRoutes = require('./ImagemRoutes')
+const imagemRoutes = require('./imagemRoutes')
 
 router.get('/', (req, res) =>{
     res.json({

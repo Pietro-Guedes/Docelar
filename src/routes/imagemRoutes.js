@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const imagemController = require('../controllers/ImagemController');
+const imagemController = require('../controllers/imagemController');
 const upload = require('../config/multer');
 
 router.get('/produto/:id_produto', imagemController.listarPorProduto);

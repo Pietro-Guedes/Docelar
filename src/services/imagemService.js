@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const ImagemRepository = require('../repositories/ImagemRepository');
+const ImagemRepository = require('../repositories/imagemRepository');
 const ProdutoRepository = require('../repositories/ProdutoRepository');
 
 class ImagemService {
