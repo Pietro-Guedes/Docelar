@@ -1,0 +1,15 @@
+.logo { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.logo-selo {
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #fff7e6, #f4d9a6);
+  border: 3px solid #b5703f;
+  box-shadow: inset 0 0 0 2px #fff3dc;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #a5552c;
+}
+.logo-selo span { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700; color: #9a3a2e; line-height: 1; margin-top: 2px; }
+.logo-legenda { display: flex; flex-direction: column; align-items: center; line-height: 1.15; }
+.logo-legenda strong { font-size: 15px; font-weight: 600; color: var(--marrom-texto); }
+.logo-legenda small { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--texto-suave); }
+.logo-claro .logo-legenda strong { color: #fff; }
+.logo-claro .logo-legenda small { color: rgba(255,255,255,.6); }

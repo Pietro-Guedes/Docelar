@@ -1,0 +1,47 @@
+.qtd-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 61px; height: 37px; padding: 0 10px; border-radius: var(--raio-pill);
+  background: var(--creme-badge); color: var(--creme-badge-texto);
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.qtd-pill.alerta { background: rgba(255,218,214,.35); color: var(--critico); }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(36, 25, 25, .55);
+  display: grid; place-items: center; padding: 16px;
+  animation: fade .15s ease;
+}
+.modal {
+  width: 100%; background: #fff; border-radius: var(--raio-lg);
+  box-shadow: var(--sombra-forte); max-height: calc(100vh - 32px); display: flex; flex-direction: column;
+  animation: pop .18s ease;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 8px; }
+.modal-head h3 { font-size: 20px; font-weight: 700; color: var(--vinho); }
+.modal-body { padding: 12px 24px 20px; overflow-y: auto; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px 20px; border-top: 1px solid var(--borda-suave); }
+
+.feedback-backdrop { background: rgba(60, 60, 60, .55); }
+.feedback {
+  width: 240px; height: 240px; background: #fff; border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  color: var(--vinho); box-shadow: var(--sombra-forte); animation: pop .2s ease;
+}
+.feedback h3 { font-size: 20px; font-weight: 600; color: var(--vinho); }
+
+.erro-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(255,218,214,.5); color: var(--critico); border-radius: var(--raio);
+  padding: 12px 16px; font-size: 14px; font-weight: 600;
+}
+
+.spinner {
+  display: inline-block; width: 16px; height: 16px; vertical-align: -3px; margin-right: 6px;
+  border: 2px solid var(--rosa-3); border-top-color: var(--vinho); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } }
+@keyframes spin { to { transform: rotate(360deg); } }

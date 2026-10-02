@@ -1,0 +1,29 @@
+.campo-erro { color: var(--critico); font-size: 12px; font-weight: 600; margin-top: 4px; }
+.prefixo { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--texto-suave); pointer-events: none; }
+.input-icon > .prefixo + .input { padding-left: 40px; }
+
+.valor-total {
+  background: rgba(255, 218, 214, .55); border-radius: var(--raio); padding: 14px 16px;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+}
+.valor-total span { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--vinho); }
+.valor-total strong { font-size: 24px; color: var(--critico); }
+
+.foto-produto {
+  height: 220px; border-radius: var(--raio);
+  background: radial-gradient(circle at 50% 45%, #fff6ea, #ead1b5) center / cover no-repeat;
+  display: grid; place-items: center; overflow: hidden;
+}
+.foto-trocar {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.88); border: 0; border-radius: var(--raio);
+  padding: 14px 22px; font-size: 13px; font-weight: 700; color: var(--vinho);
+  box-shadow: var(--sombra);
+}
+.foto-trocar:hover { background: #fff; }
+.foto-ajuda { text-align: center; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; color: var(--texto); margin-top: 14px; line-height: 1.5; }
+
+.acoes-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.acoes-mini .btn { height: 34px; font-size: 11px; text-transform: uppercase; background: #fff; }
+.tip-amarela { background: rgba(255, 236, 170, .55); border-color: rgba(193,169,101,.35); }
+.tip-amarela strong { color: var(--texto-forte); text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
