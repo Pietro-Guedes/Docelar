@@ -63,32 +63,6 @@ class EstoqueController {
         .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
     }
   }
-
-  async listarVencidos(req, res) {
-    try {
-      const resultado = await EstoqueService.listarVencidos();
-      res.json(resultado);
-    } catch (erro) {
-      console.error(erro);
-      res
-        .status(erro.status || 500)
-        .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
-    }
-  }
-
-  // GET /estoque/proximos-vencimento?dias=7
-  async listarProximosVencimento(req, res) {
-    try {
-      const dias = req.query.dias !== undefined ? Number(req.query.dias) : 7;
-      const resultado = await EstoqueService.listarProximosVencimento(dias);
-      res.json(resultado);
-    } catch (erro) {
-      console.error(erro);
-      res
-        .status(erro.status || 500)
-        .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
-    }
-  }
 }
 
 module.exports = new EstoqueController();
