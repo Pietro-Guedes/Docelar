@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const funcionarioController = require('../controllers/FuncionarioController');
-const verificarToken = require('../middleware/auth');
+const {verificarToken} = require('../middlewares/authMiddleware');
  
 // Públicas: sem essas duas, ninguém consegue criar conta ou entrar
 router.post('/', funcionarioController.cadastrar);

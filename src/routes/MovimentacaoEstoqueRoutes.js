@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
  
 const movimentacaoEstoqueController = require('../controllers/MovimentacaoEstoqueController');
-const verificarToken = require('../middlewares/authMiddleware');
+const { verificarToken }= require('../middlewares/authMiddleware');
  
 // Qualquer funcionário autenticado pode consultar e registrar movimentações
 router.get('/produto/:id_produto', verificarToken, movimentacaoEstoqueController.listarPorProduto);
