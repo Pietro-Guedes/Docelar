@@ -33,7 +33,7 @@ class CategoriaService {
         const { nome } = dados;
         if (!nome) throw { status: 400, mensagem: "Nenhum dado válido" };
 
-        await CategoriaRepository.update(id, { nome: nome.trim() });
+        await CategoriaRepository.update(id, { nome_categoria: nome.trim() });
         return { sucesso: true, mensagem: "Categoria atualizada com sucesso" };
     }
 
@@ -42,6 +42,9 @@ class CategoriaService {
         const existe = await CategoriaRepository.findById(id);
         if (!existe) throw { status: 404, mensagem: "Categoria não encontrada" };
 
+        if (await CategoriaRepository.contarVinculos(id) > 0) {
+            throw { status: 409, mensagem: "Esta categoria tem produtos. Mude a categoria deles antes de apagar." };
+        }
         await CategoriaRepository.delete(id);
         return { sucesso: true, mensagem: "Categoria apagada com sucesso" };
     }

@@ -30,7 +30,7 @@ class FuncionarioController {
 
     async atualizar(req, res) {
         try {
-            const resultado = await FuncionarioService.atualizarFuncionario(req.params.id, req.body);
+            const resultado = await FuncionarioService.atualizarFuncionario(req.params.id, req.body, req.usuarioId);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
@@ -39,7 +39,7 @@ class FuncionarioController {
 
     async deletar(req, res) {
         try {
-            const resultado = await FuncionarioService.deletarFuncionario(req.params.id);
+            const resultado = await FuncionarioService.deletarFuncionario(req.params.id, req.usuarioId);
             res.json(resultado);
         } catch (erro) {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });

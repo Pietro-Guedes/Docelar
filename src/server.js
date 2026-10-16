@@ -5,7 +5,6 @@ const pool = require('./config/database')
 
 const PORT = process.env.PORT || 3000;
 
-// O pool é do "mysql2/promise", então a conexão é testada com await (callback não funciona aqui)
 async function iniciar() {
     try {
         const connection = await pool.getConnection()
@@ -18,7 +17,8 @@ async function iniciar() {
     }
 
     if (!process.env.JWT_SECRET) {
-        console.warn('Atenção: JWT_SECRET não está no .env — o login não vai funcionar.')
+        console.error('Erro: JWT_SECRET não está no .env — defina antes de ligar o servidor.')
+        process.exit(1)
     }
 
     app.listen(PORT, () => {

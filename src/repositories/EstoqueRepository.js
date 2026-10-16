@@ -11,14 +11,16 @@ class EstoqueRepository {
         return rows[0];
     }
 
+    async findByIdParaAtualizar(id, executor) {
+        const [rows] = await executor.query('SELECT * FROM estoque WHERE id_estoque = ? FOR UPDATE', [id]);
+        return rows[0];
+    }
+
     async findByProduto(id_produto) {
         const [rows] = await pool.query('SELECT * FROM estoque WHERE id_produto = ? ORDER BY data_entrada DESC', [id_produto]);
         return rows;
     }
 
-    // executor: pool (padrão) ou uma connection já em transação (conn.beginTransaction()).
-    // lock=true adiciona FOR UPDATE, travando as linhas retornadas até o commit/rollback da transação,
-    // evitando que duas saídas concorrentes leiam o mesmo saldo e "vendam" o mesmo estoque duas vezes.
     async findByProdutoOrdenadoPorValidade(id_produto, executor = pool, lock = false) {
         const sql = `SELECT * FROM estoque WHERE id_produto = ? AND quantidade > 0 ORDER BY validade ASC${lock ? ' FOR UPDATE' : ''}`;
         const [rows] = await executor.query(sql, [id_produto]);

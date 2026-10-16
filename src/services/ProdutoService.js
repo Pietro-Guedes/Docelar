@@ -93,6 +93,9 @@ class ProdutoService {
         const existe = await ProdutoRepository.findById(id);
         if (!existe) throw { status: 404, mensagem: "Produto não encontrado" };
 
+        if (await ProdutoRepository.contarVinculos(id) > 0) {
+            throw { status: 409, mensagem: "Este produto tem lotes e movimentações de estoque. Apagar removeria o histórico." };
+        }
         await ProdutoRepository.delete(id);
         return { sucesso: true, mensagem: "Produto apagado com sucesso" };
     }

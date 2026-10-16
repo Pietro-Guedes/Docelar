@@ -40,6 +40,12 @@ class CadastroFornecedoresRepository {
         return result.affectedRows;
     }
 
+    async contarVinculos(id) {
+        const [[r0]] = await pool.query('SELECT COUNT(*) AS total FROM produto WHERE id_fornecedor = ?', [id]);
+        const [[r1]] = await pool.query('SELECT COUNT(*) AS total FROM estoque WHERE id_fornecedor = ?', [id]);
+        return Number(r0.total) + Number(r1.total);
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM fornecedor WHERE id_fornecedor = ?', [id]);
         return result.affectedRows;

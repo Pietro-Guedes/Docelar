@@ -29,7 +29,6 @@ class ProdutoRepository {
                 );
                 return result.insertId;
             } catch (erro) {
-                // Banco ainda sem a coluna estoque_minimo (rode o arquivo banco/estoque_minimo.sql): salva sem ela
                 if (erro.code !== 'ER_BAD_FIELD_ERROR') throw erro;
                 avisarSemColuna();
             }
@@ -57,12 +56,16 @@ class ProdutoRepository {
             const [result] = await pool.query(query, values);
             return result.affectedRows;
         } catch (erro) {
-            // Banco ainda sem a coluna estoque_minimo: atualiza o resto
             if (erro.code !== 'ER_BAD_FIELD_ERROR' || produtoData.estoque_minimo === undefined) throw erro;
             avisarSemColuna();
             const { estoque_minimo, ...resto } = produtoData;
             return Object.keys(resto).length ? this.update(id, resto) : 0;
         }
+    }
+
+    async contarVinculos(id) {
+        const [[r0]] = await pool.query('SELECT COUNT(*) AS total FROM estoque WHERE id_produto = ?', [id]);
+        return Number(r0.total);
     }
 
     async delete(id) {

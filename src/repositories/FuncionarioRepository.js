@@ -40,6 +40,12 @@ class FuncionarioRepository {
         return result.affectedRows;
     }
 
+    async contarVinculos(id) {
+        const [[r0]] = await pool.query('SELECT COUNT(*) AS total FROM produto WHERE id_funcionario = ?', [id]);
+        const [[r1]] = await pool.query('SELECT COUNT(*) AS total FROM movimentacao_estoque WHERE id_funcionario = ?', [id]);
+        return Number(r0.total) + Number(r1.total);
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM funcionario WHERE id_funcionario = ?', [id]);
         return result.affectedRows;

@@ -58,6 +58,9 @@ class CadastroFornecedoresService {
         const existe = await CadastroFornecedoresRepository.findById(id);
         if (!existe) throw { status: 404, mensagem: "Fornecedor não encontrado" };
 
+        if (await CadastroFornecedoresRepository.contarVinculos(id) > 0) {
+            throw { status: 409, mensagem: "Este fornecedor está ligado a produtos ou lotes. Troque o fornecedor deles antes de apagar." };
+        }
         await CadastroFornecedoresRepository.delete(id);
         return { sucesso: true, mensagem: "Fornecedor apagado com sucesso" };
     }

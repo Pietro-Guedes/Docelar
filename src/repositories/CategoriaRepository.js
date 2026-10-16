@@ -39,6 +39,11 @@ class CategoriaRepository {
         return result.affectedRows;
     }
 
+    async contarVinculos(id) {
+        const [[r0]] = await pool.query('SELECT COUNT(*) AS total FROM produto WHERE id_categoria = ?', [id]);
+        return Number(r0.total);
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM categoria WHERE id_categoria = ?', [id]);
         return result.affectedRows;

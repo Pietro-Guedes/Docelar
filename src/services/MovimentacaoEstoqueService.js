@@ -10,7 +10,6 @@ class MovimentacaoEstoqueService {
         return { sucesso: true, dados: movimentacoes, total: movimentacoes.length };
     }
 
-    // ENTRADA: cria lote novo + registra a movimentação (tudo na mesma transação)
     async registrarEntrada(dados, id_funcionario) {
         const { id_produto, id_fornecedor, quantidade, valor_unitario, validade, observacao } = dados;
 
@@ -25,7 +24,6 @@ class MovimentacaoEstoqueService {
         try {
             await conn.beginTransaction();
 
-            // Observação: cadastrarEstoque devolve o id do lote no campo "id" (não "id_estoque").
             const { id: id_estoque } = await EstoqueService.criarLote(
                 { id_produto, id_fornecedor, quantidade, validade },
                 conn
@@ -51,10 +49,8 @@ class MovimentacaoEstoqueService {
         }
     }
 
-    // SAIDA: distribui a quantidade entre lotes existentes, do que vence primeiro pro que vence por último (FEFO)
-    // e atualiza o saldo de cada lote
     async registrarSaida(dados, id_funcionario) {
-        const { id_produto, quantidade, observacao } = dados;
+        const { id_produto, quantidade, observacao, id_entregador } = dados;
 
         if (!id_produto || isNaN(id_produto)) throw { status: 400, mensagem: "Produto é obrigatório" };
         if (typeof quantidade !== "number" || quantidade <= 0) {
@@ -68,8 +64,6 @@ class MovimentacaoEstoqueService {
         try {
             await conn.beginTransaction();
 
-            // lock=true -> SELECT ... FOR UPDATE: trava os lotes lidos até o commit/rollback,
-            // impedindo que duas saídas concorrentes consumam o mesmo saldo (overselling).
             const lotes = await EstoqueRepository.findByProdutoOrdenadoPorValidade(id_produto, conn, true);
             const saldoTotal = lotes.reduce((soma, lote) => soma + Number(lote.quantidade), 0);
 
@@ -87,10 +81,8 @@ class MovimentacaoEstoqueService {
 
                 const consumida = Math.min(saldoLote, restante);
 
-                // 1. Baixa a quantidade do lote
                 await EstoqueRepository.update(lote.id_estoque, { quantidade: saldoLote - consumida }, conn);
 
-                // 2. Registra a movimentação de saída
                 const id_movimentacao = await MovimentacaoEstoqueRepository.create({
                     tipo: 'SAIDA',
                     quantidade: consumida,
@@ -98,7 +90,8 @@ class MovimentacaoEstoqueService {
                     motivo_devolucao: null,
                     observacao: observacao || null,
                     id_estoque: lote.id_estoque,
-                    id_funcionario
+                    id_funcionario,
+                    id_entregador: id_entregador || null
                 }, conn);
 
                 movimentacoesGeradas.push({ id_movimentacao, id_estoque: lote.id_estoque, quantidade: consumida });
@@ -115,7 +108,6 @@ class MovimentacaoEstoqueService {
         }
     }
 
-    // DEVOLUCAO: sempre referente a um lote específico (o cliente devolveu algo que saiu de um lote conhecido)
     async registrarDevolucao(dados, id_funcionario) {
         const { id_estoque, quantidade, motivo_devolucao, observacao } = dados;
 
@@ -128,20 +120,33 @@ class MovimentacaoEstoqueService {
             throw { status: 400, mensagem: "Funcionário é obrigatório" };
         }
 
-        const lote = await EstoqueRepository.findById(id_estoque);
-        if (!lote) throw { status: 404, mensagem: "Lote não encontrado" };
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
 
-        const id_movimentacao = await MovimentacaoEstoqueRepository.create({
-            tipo: 'DEVOLUCAO',
-            quantidade,
-            valor_unitario: null,
-            motivo_devolucao,
-            observacao: observacao || null,
-            id_estoque,
-            id_funcionario
-        });
+            const lote = await EstoqueRepository.findByIdParaAtualizar(id_estoque, conn);
+            if (!lote) throw { status: 404, mensagem: "Lote não encontrado" };
 
-        return { sucesso: true, mensagem: "Devolução registrada com sucesso", id_movimentacao };
+            await EstoqueRepository.update(id_estoque, { quantidade: Number(lote.quantidade) + quantidade }, conn);
+
+            const id_movimentacao = await MovimentacaoEstoqueRepository.create({
+                tipo: 'DEVOLUCAO',
+                quantidade,
+                valor_unitario: null,
+                motivo_devolucao,
+                observacao: observacao || null,
+                id_estoque,
+                id_funcionario
+            }, conn);
+
+            await conn.commit();
+            return { sucesso: true, mensagem: "Devolução registrada com sucesso", id_movimentacao };
+        } catch (erro) {
+            await conn.rollback();
+            throw erro;
+        } finally {
+            conn.release();
+        }
     }
 }
 
