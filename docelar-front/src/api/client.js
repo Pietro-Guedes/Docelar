@@ -1,7 +1,3 @@
-// Cliente HTTP único do front, ligado ao back-end Docelar (Express, porta 3000).
-// O back responde sempre { sucesso, dados, total } ou { sucesso, mensagem, id };
-// em caso de erro: { sucesso: false, mensagem }.
-
 import { mockRequest } from './mock';
 
 export const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -10,18 +6,40 @@ export const USE_MOCK = String(import.meta.env.VITE_USE_MOCK ?? 'false') === 'tr
 const TOKEN_KEY = 'docelar_token';
 const USER_KEY = 'docelar_funcionario';
 
+export const EVENTO_SESSAO_EXPIRADA = 'docelar:sessao-expirada';
+
+const ler = (chave) => sessionStorage.getItem(chave) ?? localStorage.getItem(chave);
+
+export function expiracaoDoToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.exp ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export const auth = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
-  getFuncionario: () => {
-    try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch { return null; }
+  getToken: () => {
+    const token = ler(TOKEN_KEY);
+    const exp = token && expiracaoDoToken(token);
+    if (exp && Date.now() >= exp) { auth.clear(); return null; }
+    return token;
   },
-  salvar: (token, funcionario) => {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(funcionario));
+  getFuncionario: () => {
+    try { return JSON.parse(ler(USER_KEY)); } catch { return null; }
+  },
+  salvar: (token, funcionario, lembrar = true) => {
+    auth.clear();
+    const storage = lembrar ? localStorage : sessionStorage;
+    storage.setItem(TOKEN_KEY, token);
+    storage.setItem(USER_KEY, JSON.stringify(funcionario));
   },
   clear: () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    for (const s of [localStorage, sessionStorage]) {
+      s.removeItem(TOKEN_KEY);
+      s.removeItem(USER_KEY);
+    }
   },
 };
 
@@ -75,11 +93,10 @@ export async function request(path, { method = 'GET', body } = {}) {
 function tratar401(status) {
   if (status === 401 && auth.getToken()) {
     auth.clear();
-    if (!location.pathname.startsWith('/login')) location.assign('/login');
+    window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA));
   }
 }
 
-// links de imagem do back vêm como "/uploads/arquivo.png"
 export function urlArquivo(link) {
   if (!link) return null;
   if (/^(https?:|blob:|data:)/.test(link)) return link;

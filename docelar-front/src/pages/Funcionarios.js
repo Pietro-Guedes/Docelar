@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { UserPlus, Pencil, Trash2, Users, Save, X, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro, Loading } from '../components/ui';
-import { Avatar, useUsuario } from '../components/Layout';
+import { Avatar, useUsuario, usePageMeta } from '../components/Layout';
 import { listarFuncionarios, salvarFuncionario, excluirFuncionario } from '../api';
 import { useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
@@ -9,6 +9,7 @@ import './Cadastros.css';
 const VAZIO = { id: null, nome: '', email: '', senha: '' };
 
 export default function Funcionarios() {
+  usePageMeta({ breadcrumb: ['Cadastros', 'Funcionários'], title: 'Funcionários' });
   const feedback = useFeedback();
   const { usuario } = useUsuario() || {};
   const { data, loading, error, reload } = useAsync(listarFuncionarios, []);
@@ -94,8 +95,12 @@ export default function Funcionarios() {
                       </td>
                       <td>{f.email}</td>
                       <td className="num" style={{ whiteSpace: 'nowrap' }}>
-                        <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
-                        <button className="icon-btn danger" disabled={usuario?.id === f.id} title={usuario?.id === f.id ? 'Você não pode apagar a si mesmo' : undefined} onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
+                        {usuario?.id === f.id && (
+                          <>
+                            <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
+                            <button className="icon-btn danger" disabled title="Você não pode apagar a si mesmo" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

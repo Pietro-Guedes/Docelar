@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FileText, Truck, Trash2, ReceiptText } from 'lucide-react';
 import AdicionarItem from '../components/AdicionarItem';
 import { Feedback, useFeedback, Thumb } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { listarFornecedores, registrarEntrada } from '../api';
 import { dinheiro, dataBR, mensagemErro } from '../utils';
 import './Movimentacao.css';
@@ -11,6 +12,7 @@ const hoje = () => new Date().toISOString().slice(0, 10);
 const chave = (i) => `${i.produtoId}|${i.validade || ''}|${i.valorUnitario}`;
 
 export default function EntradaMercadorias() {
+  usePageMeta({ breadcrumb: ['Movimentação', 'Entrada'], title: 'Entrada de Produtos' });
   const navigate = useNavigate();
   const feedback = useFeedback();
   const [fornecedores, setFornecedores] = useState([]);

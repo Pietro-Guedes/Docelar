@@ -1,6 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import { auth } from './api/client';
+import { auth, expiracaoDoToken, EVENTO_SESSAO_EXPIRADA } from './api/client';
 
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -12,6 +13,7 @@ import Inventario from './pages/Inventario';
 import InventarioCategoria from './pages/InventarioCategoria';
 import Relatorios from './pages/Relatorios';
 import Fornecedores from './pages/Fornecedores';
+import Categorias from './pages/Categorias';
 import Funcionarios from './pages/Funcionarios';
 import Perfil from './pages/Perfil';
 
@@ -21,9 +23,36 @@ function Protegido({ children }) {
   return children;
 }
 
+function ControleSessao() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const irParaLogin = () => {
+      auth.clear();
+      if (!location.pathname.startsWith('/login')) {
+        navigate('/login', { replace: true, state: { de: location.pathname, expirou: true } });
+      }
+    };
+    window.addEventListener(EVENTO_SESSAO_EXPIRADA, irParaLogin);
+
+    const token = auth.getToken();
+    const exp = token && expiracaoDoToken(token);
+    const timer = exp ? setTimeout(irParaLogin, Math.max(0, exp - Date.now())) : null;
+
+    return () => {
+      window.removeEventListener(EVENTO_SESSAO_EXPIRADA, irParaLogin);
+      clearTimeout(timer);
+    };
+  }, [navigate, location.pathname]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ControleSessao />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<Protegido><Layout /></Protegido>}>
@@ -37,6 +66,7 @@ export default function App() {
           <Route path="inventario/:categoria" element={<InventarioCategoria />} />
           <Route path="relatorios" element={<Relatorios />} />
           <Route path="fornecedores" element={<Fornecedores />} />
+          <Route path="categorias" element={<Categorias />} />
           <Route path="funcionarios" element={<Funcionarios />} />
           <Route path="perfil" element={<Perfil />} />
         </Route>

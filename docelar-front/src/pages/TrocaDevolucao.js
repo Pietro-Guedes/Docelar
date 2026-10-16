@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Package, MessageSquareWarning, ArrowLeftRight, Undo2, HelpCircle, History, Printer, Trash2, Minus, Plus, ExternalLink } from 'lucide-react';
 import { Feedback, useFeedback, Thumb, Modal, Loading, Erro } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { listarProdutos, registrarDevolucao, registrarSaida, listarDevolucoes } from '../api';
 import { dinheiro, dataBR, gerarProtocolo, mensagemErro } from '../utils';
 import './TrocaDevolucao.css';
@@ -17,7 +18,6 @@ const MOTIVOS = [
 
 const CLIENTE_VAZIO = { nome: '', documento: '', email: '', telefone: '' };
 
-// extrai os dados que gravamos na observação da devolução
 function lerObservacao(obs = '') {
   const pega = (rotulo) => obs.match(new RegExp(`${rotulo}:?\\s*([^·]+)`))?.[1]?.trim() || '';
   return {
@@ -28,6 +28,7 @@ function lerObservacao(obs = '') {
 }
 
 export default function TrocaDevolucao() {
+  usePageMeta({ breadcrumb: ['Movimentação', 'Devolução'], title: 'Troca e Devolução' });
   const navigate = useNavigate();
   const feedback = useFeedback();
   const [protocolo, setProtocolo] = useState(gerarProtocolo);
@@ -84,7 +85,6 @@ export default function TrocaDevolucao() {
     try {
       await registrarDevolucao({ loteId, quantidade, motivo, observacao });
       if (acao === 'TROCA') {
-        // na troca o cliente leva um produto novo: registra a saída da reposição
         try {
           await registrarSaida({ pedido: `Troca ${protocolo}`, observacoes: `Reposição da troca · Cliente: ${cliente.nome.trim()}`, itens: [{ produtoId: produto.id, nome: produto.nome, quantidade }] });
         } catch (e) {

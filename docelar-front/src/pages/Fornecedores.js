@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Building2, Pencil, Trash2, Truck, Save, X, Lightbulb, Search } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro, Loading, Pagination, usePaginacao } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { listarFornecedores, salvarFornecedor, excluirFornecedor } from '../api';
 import { mascaraCnpj, mascaraTelefone, cnpjValido, useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
@@ -8,6 +9,7 @@ import './Cadastros.css';
 const VAZIO = { id: null, nome: '', cnpj: '', telefone: '', email: '' };
 
 export default function Fornecedores() {
+  usePageMeta({ breadcrumb: ['Cadastros', 'Fornecedores'], title: 'Fornecedores' });
   const feedback = useFeedback();
   const { data, loading, error, reload } = useAsync(listarFornecedores, []);
   const [form, setForm] = useState(VAZIO);

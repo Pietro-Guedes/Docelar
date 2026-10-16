@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Bell, Menu, Search, LayoutDashboard, PackagePlus, FilePlus2, Boxes, PackageMinus,
-  RotateCcw, BarChart3, UserCircle2, Users, Truck, Plus, ArrowLeft, LogOut, X,
+  RotateCcw, BarChart3, UserCircle2, Users, Truck, Plus, ArrowLeft, LogOut, X, Tags,
 } from 'lucide-react';
 import Logo from './Logo';
 import { getUsuarioLogado, logout } from '../api';
@@ -20,16 +20,15 @@ const MENU = [
   { to: '/perfil', label: 'Tela Perfil', icon: UserCircle2 },
   { to: '/funcionarios', label: 'Funcionários', icon: Users },
   { to: '/fornecedores', label: 'Fornecedores', icon: Truck },
+  { to: '/categorias', label: 'Categorias', icon: Tags },
 ];
 
-// Cada página informa o título do cabeçalho e os botões do rodapé.
 const PageMetaContext = createContext(() => {});
 export function usePageMeta(meta, deps = []) {
   const set = useContext(PageMetaContext);
   useEffect(() => {
     set(meta);
     return () => set({});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 
@@ -46,7 +45,6 @@ export default function Layout() {
 
   useEffect(() => { getUsuarioLogado().then(setUsuario).catch(() => {}); }, []);
 
-  // no celular o menu fecha ao trocar de página
   useEffect(() => { if (window.innerWidth <= 1100) setMenuAberto(false); }, [pathname]);
 
   function buscar(e) {

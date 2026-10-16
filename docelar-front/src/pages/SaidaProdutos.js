@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ReceiptText, Truck, Wallet, Printer, Navigation, Save, Trash2, NotebookPen } from 'lucide-react';
 import AdicionarItem from '../components/AdicionarItem';
 import { Feedback, useFeedback, Thumb } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { listarFuncionarios, registrarSaida } from '../api';
 import { dinheiro, mensagemErro } from '../utils';
 import './Movimentacao.css';
@@ -14,6 +15,7 @@ function novoCodigoPedido() {
 }
 
 export default function SaidaProdutos() {
+  usePageMeta({ breadcrumb: ['Movimentação', 'Saída'], title: 'Saída de Produtos' });
   const feedback = useFeedback();
   const [codigo, setCodigo] = useState(novoCodigoPedido);
   const [itens, setItens] = useState([]);
@@ -50,7 +52,7 @@ export default function SaidaProdutos() {
       await registrarSaida({
         pedido: codigo,
         status,
-        entregador: funcionarios.find((f) => String(f.id) === entregador)?.nome || 'Retirada no balcão',
+        entregadorId: entregador || null,
         pagamento,
         observacoes,
         itens,
@@ -60,7 +62,6 @@ export default function SaidaProdutos() {
       setObservacoes('');
       setCodigo(novoCodigoPedido());
     } catch (e) {
-      // tira da lista o que já foi registrado antes do erro
       if (e.feitos?.length) setItens((l) => l.filter((i) => !e.feitos.includes(i)));
       setErro(mensagemErro(e));
     } finally {

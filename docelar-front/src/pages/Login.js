@@ -12,7 +12,7 @@ export default function Login() {
   const [senha, setSenha] = useState('');
   const [verSenha, setVerSenha] = useState(false);
   const [lembrar, setLembrar] = useState(true);
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState(location.state?.expirou ? 'Sua sessão expirou. Entre de novo.' : '');
   const [carregando, setCarregando] = useState(false);
 
   async function entrar(e) {
@@ -20,7 +20,7 @@ export default function Login() {
     setErro('');
     setCarregando(true);
     try {
-      await login(email.trim(), senha);
+      await login(email.trim(), senha, lembrar);
       navigate(location.state?.de || '/', { replace: true });
     } catch (err) {
       setErro(err.message || 'Não foi possível entrar.');
@@ -32,7 +32,6 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        {/* lado da imagem */}
         <section className="login-hero">
           <div className="login-hero-texto">
             <Logo size={44} legenda={false} />
@@ -48,7 +47,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* lado do formulário */}
         <section className="login-form-lado">
           <form className="login-form" onSubmit={entrar}>
             <div className="login-logo"><Logo size={76} legenda={false} /></div>

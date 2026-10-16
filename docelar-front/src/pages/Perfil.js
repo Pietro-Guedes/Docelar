@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, BadgeCheck, LogOut, Save, UserRound, Lock, Bell } from 'lucide-react';
 import { Feedback, useFeedback } from '../components/ui';
-import { Avatar, useUsuario } from '../components/Layout';
+import { Avatar, useUsuario, usePageMeta } from '../components/Layout';
 import { salvarFuncionario, logout } from '../api';
 import { mensagemErro } from '../utils';
 import './Cadastros.css';
@@ -19,6 +19,7 @@ export function lerPrefs() {
 }
 
 export default function Perfil() {
+  usePageMeta({ breadcrumb: ['Conta', 'Meu Perfil'], title: 'Meu Perfil' });
   const navigate = useNavigate();
   const feedback = useFeedback();
   const { usuario, setUsuario } = useUsuario() || {};

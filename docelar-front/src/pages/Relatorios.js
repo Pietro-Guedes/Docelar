@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TrendingUp, TrendingDown, RefreshCcw, AlertTriangle, Undo2, CalendarDays, FileDown, Printer } from 'lucide-react';
 import { Thumb, Pagination, usePaginacao, Erro, Loading } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { getRelatorio } from '../api';
 import { dinheiro, dataBR, numero, useAsync } from '../utils';
 import { lerPrefs } from './Perfil';
@@ -15,6 +16,7 @@ const CORES = ['#a53146', '#c1a965', '#875136', '#e7b8bf'];
 const TIPOS = { ENTRADA: { label: 'Entrada', cls: 'badge-ok' }, SAIDA: { label: 'Saída', cls: 'badge-creme' }, DEVOLUCAO: { label: 'Devolução', cls: 'badge-critico' } };
 
 export default function Relatorios() {
+  usePageMeta({ breadcrumb: ['Gestão', 'Relatórios'], title: 'Relatórios' });
   const [dias, setDias] = useState(() => (lerPrefs().resumoSemanal ? 7 : 30));
   const [tipo, setTipo] = useState('');
   const { data, loading, error, reload } = useAsync(() => getRelatorio(dias), [dias]);

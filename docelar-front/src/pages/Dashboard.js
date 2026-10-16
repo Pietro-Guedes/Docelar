@@ -4,7 +4,7 @@ import {
   CalendarClock, Package, PackagePlus, PackageMinus, ArrowRight,
 } from 'lucide-react';
 import { StatCard, Thumb, Erro, Loading } from '../components/ui';
-import { useUsuario } from '../components/Layout';
+import { useUsuario, usePageMeta } from '../components/Layout';
 import { getDashboard } from '../api';
 import { numero, pad2, tempoAtras, useAsync } from '../utils';
 import { lerPrefs } from './Perfil';
@@ -27,6 +27,7 @@ function saudacao() {
 }
 
 export default function Dashboard() {
+  usePageMeta({ breadcrumb: ['Docelar', 'Tela Principal'], title: 'Tela Principal' });
   const navigate = useNavigate();
   const { usuario } = useUsuario() || {};
   const { data, loading, error, reload } = useAsync(getDashboard, []);

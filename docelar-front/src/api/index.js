@@ -1,16 +1,10 @@
-// Todas as chamadas ao back-end Docelar ficam aqui.
-// As funções devolvem objetos já "traduzidos" para o front (ex.: id_produto -> id,
-// valor_unitario -> valorUnitario), assim as telas não dependem dos nomes do banco.
-
 import { request, auth, urlArquivo } from './client';
 
-export const ESTOQUE_MINIMO_PADRAO = 10; // usado enquanto a tabela produto não tiver a coluna estoque_minimo
+export const ESTOQUE_MINIMO_PADRAO = 10;
 
 const dados = (r) => (r && Array.isArray(r.dados) ? r.dados : r?.dados ?? r);
 const num = (v) => (v === null || v === undefined || v === '' ? 0 : Number(v));
 
-// ------------------------------------------------------------------ cache simples
-// (algumas telas juntam várias rotas; o cache evita repetir chamadas na mesma navegação)
 const cache = new Map();
 async function cacheado(chave, fn, ttl = 15000) {
   const c = cache.get(chave);
@@ -21,7 +15,6 @@ async function cacheado(chave, fn, ttl = 15000) {
 }
 export const limparCache = () => cache.clear();
 
-// ------------------------------------------------------------------ conversores
 const toCategoria = (c) => ({ id: c.id_categoria, nome: c.nome_categoria ?? c.nome });
 const toFornecedor = (f) => ({ id: f.id_fornecedor, nome: f.nome, cnpj: f.cnpj || '', telefone: f.telefone || '', email: f.email || '' });
 const toFuncionario = (f) => ({ id: f.id_funcionario ?? f.id, nome: f.nome, email: f.email || '' });
@@ -36,10 +29,9 @@ const toLote = (l) => ({
 
 export const codigoProduto = (id) => String(id).padStart(3, '0');
 
-// ------------------------------------------------------------------ autenticação
-export async function login(email, senha) {
+export async function login(email, senha, lembrar = true) {
   const r = await request('/funcionario/login', { method: 'POST', body: { email, senha } });
-  auth.salvar(r.token, r.funcionario);
+  auth.salvar(r.token, r.funcionario, lembrar);
   limparCache();
   return r.funcionario;
 }
@@ -59,7 +51,6 @@ export async function getUsuarioLogado() {
   }
 }
 
-// ------------------------------------------------------------------ categorias
 export const listarCategorias = () =>
   cacheado('categorias', async () => dados(await request('/categoria')).map(toCategoria).sort((a, b) => a.id - b.id), 60000);
 
@@ -75,7 +66,6 @@ export async function excluirCategoria(id) {
   return request(`/categoria/${id}`, { method: 'DELETE' });
 }
 
-// ------------------------------------------------------------------ fornecedores
 export const listarFornecedores = () =>
   cacheado('fornecedores', async () => dados(await request('/cadastrofornecedores')).map(toFornecedor));
 
@@ -92,7 +82,6 @@ export async function excluirFornecedor(id) {
   return request(`/cadastrofornecedores/${id}`, { method: 'DELETE' });
 }
 
-// ------------------------------------------------------------------ funcionários
 export const listarFuncionarios = () =>
   cacheado('funcionarios', async () => dados(await request('/funcionario')).map(toFuncionario));
 
@@ -111,10 +100,8 @@ export async function excluirFuncionario(id) {
   return request(`/funcionario/${id}`, { method: 'DELETE' });
 }
 
-// ------------------------------------------------------------------ estoque (lotes)
 export const listarLotes = () => cacheado('lotes', async () => dados(await request('/estoque')).map(toLote));
 
-// ------------------------------------------------------------------ produtos
 async function imagemDoProduto(id) {
   try {
     const imgs = dados(await request(`/imagens/produto/${id}`));
@@ -125,7 +112,6 @@ async function imagemDoProduto(id) {
   }
 }
 
-// Junta produto + categoria + fornecedor + soma dos lotes (+ foto)
 export const listarProdutos = () =>
   cacheado('produtos', async () => {
     const [produtos, categorias, fornecedores, lotes] = await Promise.all([
@@ -165,7 +151,6 @@ export async function buscarProduto(id) {
   return lista.find((p) => String(p.id) === String(id)) || null;
 }
 
-// produto: { id?, nome, descricao, valorUnitario, categoriaId, fornecedorId, minimo, quantidadeInicial?, validade? }
 export async function salvarProduto(produto, arquivoImagem) {
   const body = {
     nome: produto.nome,
@@ -183,7 +168,6 @@ export async function salvarProduto(produto, arquivoImagem) {
     body.id_funcionario = auth.getFuncionario()?.id;
     const r = await request('/produtos', { method: 'POST', body });
     id = r.id;
-    // a quantidade inicial vira o primeiro lote, registrada como ENTRADA (aparece no histórico)
     const qtd = Number(produto.quantidadeInicial);
     if (qtd > 0) {
       await request('/movimentacaoestoque/entrada', {
@@ -203,7 +187,9 @@ export async function salvarProduto(produto, arquivoImagem) {
   if (arquivoImagem) {
     const fd = new FormData();
     fd.append('imagem', arquivoImagem);
-    await request(`/imagens/produto/${id}`, { method: 'POST', body: fd });
+    const nova = await request(`/imagens/produto/${id}`, { method: 'POST', body: fd });
+    const antigas = (dados(await request(`/imagens/produto/${id}`)) || []).filter((i) => i.id !== nova?.id);
+    await Promise.all(antigas.map((i) => request(`/imagens/${i.id}`, { method: 'DELETE' }).catch(() => {})));
   }
 
   limparCache();
@@ -215,8 +201,6 @@ export async function excluirProduto(id) {
   return request(`/produtos/${id}`, { method: 'DELETE' });
 }
 
-// ------------------------------------------------------------------ movimentações
-// O back só lista movimentações por produto, então juntamos as de todos os produtos.
 export const listarMovimentacoes = () =>
   cacheado('movimentacoes', async () => {
     const [produtos, funcionarios] = await Promise.all([listarProdutos(), listarFuncionarios().catch(() => [])]);
@@ -238,6 +222,7 @@ export const listarMovimentacoes = () =>
           valorUnitario: valorUnit,
           valorTotal: valorUnit * num(m.quantidade),
           motivo: m.motivo_devolucao || '',
+          entregador: m.id_entregador ? funcionarios.find((f) => f.id === m.id_entregador)?.nome || null : null,
           observacao: m.observacao || '',
           loteId: m.id_estoque,
           funcionarioId: m.id_funcionario,
@@ -251,7 +236,6 @@ export const listarMovimentacoes = () =>
       .sort((a, b) => String(b.data).localeCompare(String(a.data)));
   });
 
-// entrada: { fornecedorId, notaFiscal, dataEmissao, observacoes, itens:[{produtoId, quantidade, valorUnitario, validade}] }
 export async function registrarEntrada(entrada) {
   const obs = [entrada.notaFiscal && `NF ${entrada.notaFiscal}`, entrada.dataEmissao && `emitida em ${entrada.dataEmissao}`, entrada.observacoes]
     .filter(Boolean).join(' · ');
@@ -277,12 +261,10 @@ export async function registrarEntrada(entrada) {
   return feitos;
 }
 
-// saida: { pedido, entregador, pagamento, observacoes, itens:[{produtoId, nome, quantidade}] }
 export async function registrarSaida(saida) {
   const obs = [
     saida.pedido && `Pedido ${saida.pedido}`,
     saida.status === 'em_rota' ? 'Em rota' : null,
-    saida.entregador && `Entregador: ${saida.entregador}`,
     saida.pagamento && `Pagamento: ${saida.pagamento}`,
     saida.observacoes,
   ].filter(Boolean).join(' · ');
@@ -293,7 +275,7 @@ export async function registrarSaida(saida) {
       try {
         await request('/movimentacaoestoque/saida', {
           method: 'POST',
-          body: { id_produto: item.produtoId, quantidade: Number(item.quantidade), observacao: obs || null },
+          body: { id_produto: item.produtoId, quantidade: Number(item.quantidade), observacao: obs || null, id_entregador: saida.entregadorId ? Number(saida.entregadorId) : null },
         });
       } catch (e) {
         e.message = `${item.nome}: ${e.message}`;
@@ -308,7 +290,6 @@ export async function registrarSaida(saida) {
   return feitos;
 }
 
-// devolucao: { loteId, quantidade, motivo, observacao }
 export async function registrarDevolucao(d) {
   try {
     return await request('/movimentacaoestoque/devolucao', {
@@ -324,7 +305,6 @@ export async function listarDevolucoes() {
   return (await listarMovimentacoes()).filter((m) => m.tipo === 'DEVOLUCAO');
 }
 
-// ------------------------------------------------------------------ indicadores (calculados no front)
 const DIA = 86400000;
 const dentroDe = (data, dias) => Date.now() - new Date(data).getTime() <= dias * DIA;
 const mesmoDia = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
@@ -377,7 +357,6 @@ export async function getRelatorio(dias = 30) {
   const estoqueTotal = produtos.reduce((s, p) => s + p.quantidade, 0);
   const qtdSaida30 = saidas30.reduce((s, m) => s + m.quantidade, 0);
 
-  // últimos 6 meses
   const agora = new Date();
   const mensal = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(agora.getFullYear(), agora.getMonth() - 5 + i, 1);
@@ -389,7 +368,6 @@ export async function getRelatorio(dias = 30) {
     };
   });
 
-  // produtos que mais saíram (top 3 + outros)
   const porProduto = {};
   saidas.forEach((m) => { porProduto[m.produto] = (porProduto[m.produto] || 0) + m.quantidade; });
   const ranking = Object.entries(porProduto).sort((a, b) => b[1] - a[1]);

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Info, Package, ImagePlus, Image as ImageIcon, CircleCheck, RotateCcw, Eye, Trash2, Lightbulb } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { buscarProduto, salvarProduto, excluirProduto, listarCategorias, listarFornecedores, codigoProduto, ESTOQUE_MINIMO_PADRAO } from '../api';
 import { dinheiro, mensagemErro } from '../utils';
 import './CadastroProduto.css';
@@ -12,11 +13,12 @@ const VAZIO = {
 };
 
 export default function CadastroProduto() {
+  usePageMeta({ breadcrumb: ['Inventário', 'Produto'], title: 'Cadastro de Produto' });
   const { id } = useParams();
   const navigate = useNavigate();
   const arquivoRef = useRef();
   const [form, setForm] = useState(VAZIO);
-  const [produto, setProduto] = useState(null); // produto carregado (modo edição)
+  const [produto, setProduto] = useState(null);
   const [arquivo, setArquivo] = useState(null);
   const [preview, setPreview] = useState(null);
   const [categorias, setCategorias] = useState([]);
@@ -53,7 +55,6 @@ export default function CadastroProduto() {
       })
       .catch(setErroGeral);
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(carregar, [id]);
 
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));

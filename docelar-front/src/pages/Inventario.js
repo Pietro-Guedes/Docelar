@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Wallet, ClipboardList, AlertTriangle, AlertCircle, Printer, Pencil, Trash2, Plus } from 'lucide-react';
 import { StatCard, Thumb, StatusBadge, Pagination, usePaginacao, Confirm, Erro, Loading } from '../components/ui';
+import { usePageMeta } from '../components/Layout';
 import { listarProdutos, listarCategorias, excluirProduto, statusDoProduto } from '../api';
 import { dinheiro, numero, useAsync, mensagemErro } from '../utils';
 import './Inventario.css';
@@ -12,6 +13,7 @@ async function carregar() {
 }
 
 export default function Inventario() {
+  usePageMeta({ breadcrumb: ['Estoque', 'Inventário'], title: 'Inventário' });
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const busca = params.get('busca') || '';
@@ -57,6 +59,7 @@ export default function Inventario() {
 
   return (
     <div className="page">
+      <h1 className="page-title">Inventário</h1>
       <Erro error={error || erroAcao} onRetry={error ? reload : undefined} />
       {loading && !data && <Loading />}
 
