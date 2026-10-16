@@ -1,9 +1,3 @@
--- ============================================================
--- DOCELAR — cria todas as tabelas do sistema
--- Rode no MySQL Workbench: abra este arquivo e clique no raio ⚡
--- (seguro rodar mais de uma vez: só cria o que ainda não existe)
--- ============================================================
- 
 CREATE DATABASE IF NOT EXISTS db_docelar;
 USE db_docelar;
  
@@ -62,8 +56,10 @@ CREATE TABLE IF NOT EXISTS movimentacao_estoque (
   data_movimentacao DATETIME DEFAULT CURRENT_TIMESTAMP,
   id_estoque INT NOT NULL,
   id_funcionario INT NOT NULL,
+  id_entregador INT NULL,
   FOREIGN KEY (id_estoque) REFERENCES estoque(id_estoque) ON DELETE CASCADE,
-  FOREIGN KEY (id_funcionario) REFERENCES funcionario(id_funcionario)
+  FOREIGN KEY (id_funcionario) REFERENCES funcionario(id_funcionario),
+  FOREIGN KEY (id_entregador) REFERENCES funcionario(id_funcionario)
 );
  
 CREATE TABLE IF NOT EXISTS imagem (
@@ -73,7 +69,6 @@ CREATE TABLE IF NOT EXISTS imagem (
   FOREIGN KEY (id_produto) REFERENCES produto(id_produto) ON DELETE CASCADE
 );
  
--- Categorias do Figma
 INSERT IGNORE INTO categoria (nome_categoria) VALUES
 ('Derivados do Leite'), ('Frios'), ('Salgados'), ('Doces'),
 ('Bebidas'), ('Recheios'), ('Embalagens');
