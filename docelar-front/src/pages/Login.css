@@ -1,0 +1,55 @@
+.login-page {
+  min-height: 100vh; display: grid; place-items: center; padding: 32px 16px;
+  background: #f1ece9;
+}
+.login-card {
+  width: 100%; max-width: 1240px; min-height: 680px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-radius: 28px; overflow: hidden; background: #fff8f7;
+  box-shadow: 0 30px 60px rgba(74, 54, 41, .18);
+}
+
+/* Foto de pão do Figma: salve em public/img/login.jpg que ela aparece aqui automaticamente */
+.login-hero {
+  position: relative; display: flex; align-items: flex-end; padding: 48px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(40,24,14,0) 35%, rgba(40,24,14,.85) 100%),
+    url('/img/login.jpg') center / cover no-repeat,
+    radial-gradient(120% 80% at 50% 10%, #b88a63 0%, #8a5a3b 40%, #4a2e1d 100%);
+}
+.login-hero-texto { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.login-hero-texto .logo-selo { background: transparent; border-color: rgba(255,255,255,.7); box-shadow: none; color: #fff; }
+.login-hero-texto .logo-selo span { color: #fff; }
+.login-hero h1 { font-size: 32px; font-weight: 700; letter-spacing: -.5px; }
+.login-hero p { font-size: 14px; color: rgba(255,255,255,.85); }
+.login-selo {
+  margin-top: 16px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.2);
+  display: flex; align-items: center; gap: 12px; font-size: 12px;
+}
+.login-selo strong { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.login-selo span { color: rgba(255,255,255,.75); }
+
+.login-form-lado { display: grid; place-items: center; padding: 48px 32px; }
+.login-form { width: 100%; max-width: 420px; display: flex; flex-direction: column; }
+.login-logo { display: flex; justify-content: center; margin-bottom: 18px; }
+.login-form h2 { text-align: center; font-size: 24px; font-weight: 600; color: var(--texto-forte); }
+.login-sub { text-align: center; font-size: 13px; color: var(--texto); margin: 6px 0 28px; }
+.login-form .input { background: #fff; border-color: var(--borda); height: 44px; }
+.login-senha .input { padding-right: 44px; }
+.login-olho { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: var(--texto-suave); padding: 6px; display: grid; }
+.login-opcoes { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 24px; font-size: 12px; }
+.login-opcoes label { display: flex; align-items: center; gap: 6px; color: var(--texto); }
+.login-opcoes input { accent-color: var(--vinho); }
+.login-opcoes a { color: var(--vinho); font-weight: 600; }
+.login-erro { background: rgba(255,218,214,.5); color: var(--critico); font-size: 13px; font-weight: 600; padding: 10px 12px; border-radius: var(--raio); margin-bottom: 14px; }
+.login-btn { text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+.login-suporte { margin-top: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--texto); }
+.login-copy { text-align: center; font-size: 10px; color: var(--texto-suave); margin-top: 8px; }
+
+@media (max-width: 900px) {
+  .login-card { grid-template-columns: 1fr; min-height: 0; }
+  .login-hero { min-height: 220px; padding: 28px; }
+  .login-hero h1 { font-size: 24px; }
+  .login-selo { display: none; }
+}

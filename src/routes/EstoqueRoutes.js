@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
+const { verificarToken } = require('../middlewares/authMiddleware');
 const estoqueController = require('../controllers/EstoqueController');
 
-//rotas especificas
-router.get('/', estoqueController.listarVencidos)
-router.get('/', estoqueController.listarProximosVencimento)
+router.get('/vencidos', estoqueController.listarVencidos);
+router.get('/proximos-vencimento', estoqueController.listarProximosVencimento);
 
 router.get('/', estoqueController.listar);
 router.get('/:id', estoqueController.buscarPorId);
-router.post('/', estoqueController.cadastrar);
-router.put('/:id', estoqueController.atualizar);
-router.delete('/:id', estoqueController.deletar);
+router.post('/', verificarToken, estoqueController.cadastrar);
+router.put('/:id', verificarToken, estoqueController.atualizar);
+router.delete('/:id', verificarToken, estoqueController.deletar);
 
 module.exports = router;

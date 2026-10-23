@@ -60,7 +60,6 @@ class FuncionarioService {
     if (!senhaCorreta)
       throw { status: 401, mensagem: "Email ou senha inválidos" };
 
-    // Só precisa do id no token -- não existe mais distinção de permissão entre funcionários.
     const token = jwt.sign(
       { id: funcionario.id_funcionario },
       process.env.JWT_SECRET,
@@ -75,8 +74,11 @@ class FuncionarioService {
     };
   }
 
-  async atualizarFuncionario(id, dados) {
+  async atualizarFuncionario(id, dados, idLogado) {
     if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
+    if (Number(idLogado) !== Number(id)) {
+      throw { status: 403, mensagem: "Você só pode alterar o seu próprio cadastro" };
+    }
 
     const existe = await FuncionarioRepository.findById(id);
     if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };
@@ -84,7 +86,6 @@ class FuncionarioService {
     const atualizado = {};
     const { nome, email, senha } = dados;
 
-    if (nome !== undefined) atualizado.nome = nome.trim();
     if (nome !== undefined) atualizado.nome = nome.trim();
     if (email !== undefined) {
       const emailNormalizado = email.trim().toLowerCase();
@@ -114,11 +115,17 @@ class FuncionarioService {
     return { sucesso: true, mensagem: "Funcionário atualizado com sucesso" };
   }
 
-  async deletarFuncionario(id) {
+  async deletarFuncionario(id, idLogado) {
     if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
+    if (Number(idLogado) !== Number(id)) {
+      throw { status: 403, mensagem: "Você só pode apagar o seu próprio cadastro" };
+    }
     const existe = await FuncionarioRepository.findById(id);
     if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };
 
+    if (await FuncionarioRepository.contarVinculos(id) > 0) {
+        throw { status: 409, mensagem: "Este funcionário tem produtos ou movimentações registradas no nome dele." };
+    }
     await FuncionarioRepository.delete(id);
     return { sucesso: true, mensagem: "Funcionário apagado com sucesso" };
   }

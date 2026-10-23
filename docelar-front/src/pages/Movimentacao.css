@@ -1,0 +1,33 @@
+.mov-btn-claro { background: rgba(255,255,255,.35); }
+.mov-sub { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--texto-forte); margin-bottom: 16px; }
+.mov-sub svg { color: var(--vinho); }
+.mov-nota { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 32px; }
+.mov-h3 { font-size: 18px; font-weight: 600; color: var(--marrom-texto); }
+.mov-row-input { align-items: center; }
+.mov-row-input input {
+  width: 110px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08); color: #fff; text-align: right; padding: 0 8px; font-weight: 700;
+}
+.mov-row-input input:focus { outline: none; border-color: rgba(255,255,255,.5); }
+
+/* saída */
+.saida-topo { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
+.saida-codigo { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,218,214,.6); color: var(--vinho); border-radius: var(--raio-sm); padding: 6px 12px; font-size: 12px; font-weight: 700; }
+.saida-obs .textarea { min-height: 70px; }
+.saida-resumo .resumo-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--raio); background: var(--rosa-1); }
+.saida-resumo .resumo-item + .resumo-item { margin-top: 10px; }
+.saida-resumo .resumo-item svg { color: var(--vinho); flex: none; }
+.saida-resumo .resumo-item small { display: block; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--vinho); font-weight: 700; }
+.saida-resumo .resumo-item select { border: 0; background: transparent; font-weight: 700; color: var(--texto-forte); font-size: 13px; padding: 0; outline: none; width: 100%; }
+.saida-resumo-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.saida-resumo-botoes button {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px;
+  border-radius: var(--raio); border: 0; background: var(--rosa-1); color: var(--vinho); font-size: 11px; font-weight: 600;
+}
+.saida-resumo-botoes button:hover { background: var(--rosa-2); }
+.saida-total .big { font-size: 44px; }
+.saida-total .big small { font-size: 20px; font-weight: 500; margin-right: 4px; }
+
+@media (max-width: 1180px) {
+  .mov-nota, .saida-topo { grid-template-columns: 1fr; }
+}

@@ -23,12 +23,11 @@ class MovimentacaoEstoqueRepository {
         return rows;
     }
 
-    // executor: pool (padrão) ou uma connection já em transação, para participar do commit/rollback do chamador.
     async create(movimentacaoData, executor = pool) {
-        const { tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario } = movimentacaoData;
+        const { tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario, id_entregador = null } = movimentacaoData;
         const [result] = await executor.query(
-            'INSERT INTO movimentacao_estoque (tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario]
+            'INSERT INTO movimentacao_estoque (tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario, id_entregador) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [tipo, quantidade, valor_unitario, motivo_devolucao, observacao, id_estoque, id_funcionario, id_entregador]
         );
         return result.insertId;
     }

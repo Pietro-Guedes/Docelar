@@ -62,20 +62,34 @@ class EstoqueController {
         .status(erro.status || 500)
         .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
     }
-<<<<<<< HEAD
   }
-=======
 
-    async listarVencidos(req, res) {
-        const dados = await EstoqueService.listarVencidos()
-        return res.json(dados)
+  async listarVencidos(req, res) {
+    try {
+      const resultado = await EstoqueService.listarVencidos();
+      res.json(resultado);
+    } catch (erro) {
+      console.error(erro);
+      res
+        .status(erro.status || 500)
+        .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
     }
+  }
 
-    async listarProximosVencimento(req, res) {
-        const dados = await EstoqueService.listarProximosVencimento()
-        return res.json(dados)
+  async listarProximosVencimento(req, res) {
+    try {
+      const dias = req.query.dias === undefined ? 7 : Number(req.query.dias);
+      const resultado = await EstoqueService.listarProximosVencimento(dias);
+      res.json(resultado);
+    } catch (erro) {
+      console.error(erro);
+      res
+        .status(erro.status || 500)
+        .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
     }
->>>>>>> 2db61e85edae4a35697288d96896dda5c407764a
+  }
+
+ 
 }
 
 module.exports = new EstoqueController();

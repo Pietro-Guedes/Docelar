@@ -1,0 +1,27 @@
+.td-titulo { font-size: 20px; color: var(--texto-forte); margin-bottom: 20px; }
+.td-label { font-size: 11px; font-weight: 600; color: var(--texto); margin-bottom: 6px; display: block; }
+.td-produto { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.td-produto-campos { flex: 1 1 320px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.td-qtd { flex: none; }
+.td-info { font-size: 12px; color: var(--texto-suave); margin-top: 12px; }
+
+.stepper { display: flex; align-items: center; gap: 6px; background: var(--rosa-1); border-radius: var(--raio); height: 40px; padding: 0 6px; }
+.stepper button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--texto); display: grid; place-items: center; }
+.stepper button:hover { background: var(--rosa-2); }
+.stepper span { min-width: 36px; text-align: center; font-weight: 700; color: var(--texto-forte); }
+
+.td-protocolo .big { font-size: 36px; }
+.td-protocolo .row { align-items: center; padding: 8px 0; }
+.td-btn-dev { margin-top: 10px; background: rgba(255,255,255,.14); color: #fff; }
+.td-btn-dev:hover { background: rgba(255,255,255,.22); }
+
+.td-ajuda { display: flex; gap: 14px; align-items: flex-start; background: rgba(255,218,214,.55); }
+.td-ajuda > svg { color: var(--vinho); flex: none; }
+.td-ajuda strong { color: var(--vinho); }
+
+.td-historico th { background: transparent; color: var(--vinho); font-size: 11px; }
+
+@media (max-width: 860px) { .td-produto-campos { grid-template-columns: 1fr; } }
+
+.td-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.td-status { background: rgba(246,219,146,.18); color: var(--cor-de-fundo); text-transform: none; }

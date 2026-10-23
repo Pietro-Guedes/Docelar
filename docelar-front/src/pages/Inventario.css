@@ -1,0 +1,16 @@
+.stat-btn { all: unset; display: block; cursor: pointer; border-radius: var(--raio-lg); }
+.stat-btn .stat { height: 100%; transition: box-shadow .15s, transform .12s; }
+.stat-btn:hover .stat { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(113,63,38,.1); }
+.stat-btn.on .stat { outline: 2px solid var(--vinho); }
+.stat-btn:focus-visible { outline: 2px solid var(--vinho); outline-offset: 2px; }
+
+.inv-barra { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.inv-filtro { display: flex; align-items: center; gap: 12px; font-size: 13px; background: rgba(255,255,255,.6); padding: 6px 6px 6px 16px; border-radius: var(--raio); width: fit-content; }
+.inv-filtro b { color: var(--vinho); }
+
+.dark-head th:first-child { border-top-left-radius: 0; }
+
+/* no Figma os botões de ação aparecem ao passar o mouse na linha */
+.linha-acoes .acoes-hover { opacity: .25; transition: opacity .15s; white-space: nowrap; }
+.linha-acoes:hover .acoes-hover, .linha-acoes .acoes-hover:focus-within { opacity: 1; }
+@media (hover: none) { .linha-acoes .acoes-hover { opacity: 1; } }
