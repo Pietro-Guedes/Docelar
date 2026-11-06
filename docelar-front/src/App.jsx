@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import { auth, expiracaoDoToken, EVENTO_SESSAO_EXPIRADA } from './api/client';
 
 import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 import Dashboard from './pages/Dashboard';
 import CadastroProduto from './pages/CadastroProduto';
 import EntradaMercadorias from './pages/EntradaMercadorias';
@@ -55,6 +56,7 @@ export default function App() {
       <ControleSessao />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
         <Route element={<Protegido><Layout /></Protegido>}>
           <Route index element={<Dashboard />} />
           <Route path="produtos/novo" element={<CadastroProduto />} />

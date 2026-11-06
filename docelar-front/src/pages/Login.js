@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, Headset } from 'lucide-react';
 import Logo from '../components/Logo';
 import { login } from '../api';
@@ -76,11 +76,16 @@ export default function Login() {
               <a href="mailto:suporte@docelar.com.br?subject=Esqueci minha senha">Esqueceu a senha?</a>
             </div>
 
+            {location.state?.cadastrado && !erro && (
+              <div className="login-ok">Cadastro realizado! Entre com o seu e-mail e senha.</div>
+            )}
             {erro && <div className="login-erro">{erro}</div>}
 
             <button className="btn btn-vinho btn-lg btn-block login-btn" disabled={carregando}>
               {carregando ? 'Entrando...' : 'Acessar portal'}
             </button>
+
+            <p className="login-alternar">Ainda não tem conta? <Link to="/cadastro">Criar conta</Link></p>
 
             <a className="login-suporte" href="mailto:suporte@docelar.com.br"><Headset size={15} /> Suporte TI Docelar</a>
             <p className="login-copy">© 2026 Docelar Gestão de Padaria. Todos os direitos reservados.</p>

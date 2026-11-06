@@ -43,6 +43,10 @@
 .login-opcoes input { accent-color: var(--vinho); }
 .login-opcoes a { color: var(--vinho); font-weight: 600; }
 .login-erro { background: rgba(255,218,214,.5); color: var(--critico); font-size: 13px; font-weight: 600; padding: 10px 12px; border-radius: var(--raio); margin-bottom: 14px; }
+.login-ok { background: rgba(200,235,205,.55); color: #1f6b34; font-size: 13px; font-weight: 600; padding: 10px 12px; border-radius: var(--raio); margin-bottom: 14px; }
+.login-campo-erro { display: block; color: var(--critico); font-size: 12px; font-weight: 600; margin-top: 6px; }
+.login-alternar { text-align: center; font-size: 13px; margin-top: 18px; }
+.login-alternar a { color: var(--vinho); font-weight: 700; }
 .login-btn { text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
 .login-suporte { margin-top: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--texto); }
 .login-copy { text-align: center; font-size: 10px; color: var(--texto-suave); margin-top: 8px; }
