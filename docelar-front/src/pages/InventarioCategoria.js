@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ClipboardCheck, Banknote, AlertTriangle, Printer, FileDown, Pencil, Trash2 } from 'lucide-react';
 import { StatCard, Thumb, QtdPill, Pagination, usePaginacao, Confirm, Erro, Loading } from '../components/ui';
 import { usePageMeta } from '../components/Layout';
+import { BotaoLotes, LinhaLotes, ValidadeResumo, useAbertos } from '../components/Lotes';
 import { listarProdutos, listarCategorias, excluirProduto, statusDoProduto } from '../api';
 import { dinheiro, dinheiroPartes, numero, pad2, useAsync, mensagemErro } from '../utils';
 import './Inventario.css';
@@ -19,6 +20,7 @@ export default function InventarioCategoria() {
   const [filtro, setFiltro] = useState('');
   const [apagar, setApagar] = useState(null);
   const [erroAcao, setErroAcao] = useState(null);
+  const lotes = useAbertos();
 
   const { data, loading, error, reload } = useAsync(async () => {
     const [produtos, categorias] = await Promise.all([listarProdutos(), listarCategorias()]);
@@ -80,26 +82,37 @@ export default function InventarioCategoria() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Cod</th><th>Nome do produto</th><th className="center">Qtd atual</th><th className="center">Mínimo</th>
+                    <th>Cod</th><th>Nome do produto</th><th className="center">Qtd atual</th><th className="center">Mínimo</th><th>Validade</th>
                     <th>Valor unit.</th><th>Total</th><th className="num no-print">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pag.itens.length === 0 && <tr><td colSpan={7} className="empty">Nenhum produto {filtro ? 'neste filtro' : 'nesta categoria'}.</td></tr>}
-                  {pag.itens.map((p) => (
-                    <tr key={p.id} className="linha-acoes">
+                  {pag.itens.length === 0 && <tr><td colSpan={8} className="empty">Nenhum produto {filtro ? 'neste filtro' : 'nesta categoria'}.</td></tr>}
+                  {pag.itens.map((p) => {
+                    const aberto = lotes.aberto(p.id);
+                    return (
+                    <Fragment key={p.id}>
+                    <tr className={`linha-acoes linha-produto ${aberto ? 'aberta' : ''}`} onClick={() => lotes.alternar(p.id)}>
                       <td className="muted">{p.codigo}</td>
-                      <td><div className="prod-cell" style={{ fontSize: 16 }}><Thumb src={p.imagem} alt={p.nome} />{p.nome}</div></td>
+                      <td>
+                        <BotaoLotes aberto={aberto} nome={p.nome} onClick={(e) => { e.stopPropagation(); lotes.alternar(p.id); }}>
+                          <div className="prod-cell" style={{ fontSize: 16 }}><Thumb src={p.imagem} alt={p.nome} />{p.nome}</div>
+                        </BotaoLotes>
+                      </td>
                       <td className="center"><QtdPill produto={p} /></td>
                       <td className="center" style={{ fontSize: 16 }}>{p.minimo}</td>
+                      <td><ValidadeResumo produto={p} /></td>
                       <td style={{ fontSize: 16 }}>{dinheiro(p.valorUnitario)}</td>
                       <td style={{ fontSize: 16, color: 'var(--marrom-texto)' }}>{dinheiro(p.quantidade * p.valorUnitario)}</td>
-                      <td className="num no-print acoes-hover">
+                      <td className="num no-print acoes-hover" onClick={(e) => e.stopPropagation()}>
                         <Link className="icon-btn" to={`/produtos/${p.id}`} aria-label={`Editar ${p.nome}`}><Pencil size={17} /></Link>
                         <button className="icon-btn danger" onClick={() => setApagar(p)} aria-label={`Apagar ${p.nome}`}><Trash2 size={17} /></button>
                       </td>
                     </tr>
-                  ))}
+                    {aberto && <LinhaLotes produto={p} colSpan={8} />}
+                    </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

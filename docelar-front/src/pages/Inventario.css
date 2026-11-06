@@ -14,3 +14,32 @@
 .linha-acoes .acoes-hover { opacity: .25; transition: opacity .15s; white-space: nowrap; }
 .linha-acoes:hover .acoes-hover, .linha-acoes .acoes-hover:focus-within { opacity: 1; }
 @media (hover: none) { .linha-acoes .acoes-hover { opacity: 1; } }
+
+/* ---- validade e lotes ---- */
+.linha-produto { cursor: pointer; }
+.linha-produto:hover { background: rgba(255, 241, 214, .45); }
+.linha-produto.aberta { background: rgba(255, 241, 214, .6); }
+.lotes-toggle { all: unset; display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: var(--raio); }
+.lotes-toggle:focus-visible { outline: 2px solid var(--vinho); outline-offset: 2px; }
+.lotes-toggle > svg { color: var(--vinho); flex: none; }
+
+.validade-resumo { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-size: 13px; }
+.badge svg { vertical-align: -2px; }
+
+.lotes-linha > td { padding: 0 !important; background: rgba(255, 248, 235, .8); }
+.lotes-box { padding: 14px 24px 18px 56px; }
+.lotes-titulo { display: block; font-size: 13px; margin-bottom: 10px; color: var(--marrom-texto); }
+.lotes-vazio { font-size: 13px; margin: 0; }
+.lotes-tabela { width: 100%; border-collapse: collapse; background: #fff; border-radius: var(--raio); overflow: hidden; font-size: 13px; }
+.lotes-tabela th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--texto-suave); padding: 8px 14px; background: rgba(0,0,0,.03); }
+.lotes-tabela td { padding: 9px 14px; border-top: 1px solid var(--borda-suave); }
+.lotes-tabela .num { text-align: right; }
+.lotes-tabela tr.lote-vencido td, .lotes-tabela tr.lote-urgente td { background: rgba(255, 218, 214, .35); }
+.lotes-tabela tr.lote-atencao td { background: rgba(255, 241, 194, .45); }
+
+.alerta-validade { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: var(--raio-lg); background: #fff1c2; color: #6b4e00; border: 1px solid #f0d77a; }
+.alerta-validade.vencido { background: rgba(255, 218, 214, .6); color: var(--critico); border-color: rgba(186, 26, 26, .35); }
+.alerta-validade > div { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.alerta-validade > svg { flex: none; }
+
+@media print { .linha-produto { cursor: auto; } }

@@ -279,3 +279,16 @@ img { display: block; max-width: 100%; }
 .add-item-erro { flex-basis: 100%; margin: 0; }
 .campo-erro { color: var(--critico); font-size: 12px; font-weight: 600; margin-top: 4px; }
 .mov-tabela-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 24px; flex-wrap: wrap; }
+
+/* lista de sugestões do "Buscar por nome ou código" */
+.combo { position: relative; }
+.combo-lista {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+  margin: 0; padding: 6px; list-style: none; max-height: 260px; overflow-y: auto;
+  background: #fff; border: 1px solid var(--borda-suave); border-radius: var(--raio); box-shadow: 0 12px 28px rgba(60, 30, 15, .18);
+}
+.combo-lista li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; color: var(--texto); }
+.combo-lista li b { color: var(--marrom-texto); }
+.combo-lista li small { color: var(--texto-suave); font-size: 12px; white-space: nowrap; }
+.combo-lista li.ativo { background: rgba(255, 224, 160, .55); }
+.combo-lista .combo-vazio { cursor: default; color: var(--texto-suave); }

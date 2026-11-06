@@ -1,5 +1,6 @@
 const EstoqueRepository = require('../repositories/EstoqueRepository');
 const ProdutoRepository = require('../repositories/ProdutoRepository');
+const { validarValidade } = require('../utils/validade');
 
 class EstoqueService {
     async listarEstoque() {
@@ -23,6 +24,7 @@ class EstoqueService {
         if (typeof quantidade !== "number" || quantidade <= 0) {
             throw { status: 400, mensagem: "Quantidade deve ser um número positivo" };
         }
+        validarValidade(validade);
 
         const produto = await ProdutoRepository.findById(id_produto);
         if (!produto) throw { status: 404, mensagem: "Produto não encontrado" };

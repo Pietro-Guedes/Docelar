@@ -13,6 +13,13 @@ const repo = require('../../src/repositories/EstoqueRepository');
 const produtoRepo = require('../../src/repositories/ProdutoRepository');
 const service = require('../../src/services/EstoqueService');
 
+// "hoje" fixo (só a data é simulada) para a regra dos 30 dias não depender do dia em que o teste roda
+const TODOS_MENOS_DATE = ['hrtime', 'nextTick', 'performance', 'queueMicrotask', 'requestAnimationFrame', 'cancelAnimationFrame',
+  'requestIdleCallback', 'cancelIdleCallback', 'setImmediate', 'clearImmediate', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'];
+
+beforeAll(() => jest.useFakeTimers({ now: new Date(2026, 10, 6, 12), doNotFake: TODOS_MENOS_DATE }));
+afterAll(() => jest.useRealTimers());
+
 describe('EstoqueService', () => {
   describe('cadastrarEstoque', () => {
     it('exige produto válido', async () => {
@@ -36,12 +43,29 @@ describe('EstoqueService', () => {
       expect(r).toMatchObject({ sucesso: true, id: 4 });
     });
 
+    it('recusa lote já vencido sem consultar o banco', async () => {
+      await expect(service.cadastrarEstoque({ id_produto: 1, quantidade: 5, validade: '2026-11-01' })).rejects.toMatchObject({ status: 400 });
+      expect(produtoRepo.findById).not.toHaveBeenCalled();
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('recusa lote que vence em menos de 30 dias', async () => {
+      await expect(service.cadastrarEstoque({ id_produto: 1, quantidade: 5, validade: '2026-12-05' })).rejects.toMatchObject({ status: 400 });
+      expect(repo.create).not.toHaveBeenCalled();
+    });
+
+    it('aceita lote que vence em exatamente 30 dias', async () => {
+      produtoRepo.findById.mockResolvedValue({ id_produto: 1 });
+      repo.create.mockResolvedValue(9);
+      await expect(service.cadastrarEstoque({ id_produto: 1, quantidade: 5, validade: '2026-12-06' })).resolves.toMatchObject({ id: 9 });
+    });
+
     it('repassa o executor (transação) para o repositório', async () => {
       produtoRepo.findById.mockResolvedValue({ id_produto: 1 });
       repo.create.mockResolvedValue(4);
       const conn = { fake: true };
-      await service.cadastrarEstoque({ id_produto: 1, quantidade: 5, validade: '2026-12-31' }, conn);
-      expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ validade: '2026-12-31' }), conn);
+      await service.cadastrarEstoque({ id_produto: 1, quantidade: 5, validade: '2027-01-31' }, conn);
+      expect(repo.create).toHaveBeenCalledWith(expect.objectContaining({ validade: '2027-01-31' }), conn);
     });
   });
 

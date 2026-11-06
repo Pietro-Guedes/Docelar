@@ -4,7 +4,7 @@ import { Info, Package, ImagePlus, Image as ImageIcon, CircleCheck, RotateCcw, E
 import { Feedback, useFeedback, Confirm, Erro } from '../components/ui';
 import { usePageMeta } from '../components/Layout';
 import { buscarProduto, salvarProduto, excluirProduto, listarCategorias, listarFornecedores, codigoProduto, ESTOQUE_MINIMO_PADRAO } from '../api';
-import { dinheiro, mensagemErro } from '../utils';
+import { dinheiro, mensagemErro, dataMinimaValidade, erroDeValidade } from '../utils';
 import './CadastroProduto.css';
 
 const VAZIO = {
@@ -74,6 +74,10 @@ export default function CadastroProduto() {
     if (!form.nome.trim()) e.nome = 'Informe o nome';
     if (!form.descricao.trim()) e.descricao = 'Informe uma descrição';
     if (form.valorUnitario === '' || Number(form.valorUnitario) < 0) e.valorUnitario = 'Informe um valor válido';
+    if (!produto && Number(form.quantidadeInicial) > 0) {
+      const msg = erroDeValidade(form.validade);
+      if (msg) e.validade = msg;
+    }
     setErros(e);
     return Object.keys(e).length === 0;
   }
@@ -178,7 +182,8 @@ export default function CadastroProduto() {
               {!produto && Number(form.quantidadeInicial) > 0 && (
                 <div className="field">
                   <label className="label" htmlFor="validade">Validade do lote</label>
-                  <input id="validade" type="date" className="input" value={form.validade} onChange={set('validade')} />
+                  <input id="validade" type="date" className="input" min={dataMinimaValidade()} value={form.validade} onChange={set('validade')} />
+                  {erros.validade && <small className="campo-erro">{erros.validade}</small>}
                 </div>
               )}
             </div>
