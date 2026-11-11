@@ -19,7 +19,7 @@ class FuncionarioService {
   }
 
   async cadastrarFuncionario(dados) {
-    const { nome, email, senha } = dados;
+    const { nome, email, senha, admin, codigoAdmin } = dados;
     if (!nome || !email || !senha) {
       throw { status: 400, mensagem: "Nome, email e senha são obrigatórios" };
     }
