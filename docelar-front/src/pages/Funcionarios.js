@@ -12,6 +12,7 @@ export default function Funcionarios() {
   usePageMeta({ breadcrumb: ['Cadastros', 'Funcionários'], title: 'Funcionários' });
   const feedback = useFeedback();
   const { usuario } = useUsuario() || {};
+  const isAdmin = !!usuario?.admin;
   const { data, loading, error, reload } = useAsync(listarFuncionarios, []);
   const [form, setForm] = useState(VAZIO);
   const [verSenha, setVerSenha] = useState(false);
@@ -56,7 +57,7 @@ export default function Funcionarios() {
       await excluirFuncionario(f.id);
       reload();
     } catch (err) {
-      setErroGeral(`Não foi possível apagar: ${mensagemErro(err)} (ele pode ter produtos ou movimentações no nome dele).`);
+      setErroGeral(`Não foi possível apagar: ${mensagemErro(err)}`);
     }
   }
 
@@ -90,16 +91,17 @@ export default function Funcionarios() {
                         <div className="prod-cell strong">
                           <Avatar usuario={f} size={36} />
                           {f.nome}
+                          {f.admin && <span className="badge badge-creme">Admin</span>}
                           {usuario?.id === f.id && <span className="badge badge-ok">Você</span>}
                         </div>
                       </td>
                       <td>{f.email}</td>
                       <td className="num" style={{ whiteSpace: 'nowrap' }}>
                         {usuario?.id === f.id && (
-                          <>
-                            <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
-                            <button className="icon-btn danger" disabled title="Você não pode apagar a si mesmo" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
-                          </>
+                          <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
+                        )}
+                        {isAdmin && usuario?.id !== f.id && (
+                          <button className="icon-btn danger" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
                         )}
                       </td>
                     </tr>

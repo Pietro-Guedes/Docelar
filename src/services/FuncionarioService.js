@@ -19,12 +19,25 @@ class FuncionarioService {
   }
 
   async cadastrarFuncionario(dados) {
-    const { nome, email, senha } = dados;
+    const { nome, email, senha, admin, codigoAdmin } = dados;
     if (!nome || !email || !senha) {
       throw { status: 400, mensagem: "Nome, email e senha são obrigatórios" };
     }
     if (senha.length < 6) {
       throw { status: 400, mensagem: "Senha deve ter no mínimo 6 caracteres" };
+    }
+
+    // Conta admin só é criada com o código secreto definido em ADMIN_CODE (.env)
+    let ehAdmin = 0;
+    if (admin === true || admin === 1 || admin === "1") {
+      const esperado = process.env.ADMIN_CODE;
+      if (!esperado) {
+        throw { status: 403, mensagem: "Cadastro de administrador desativado (defina ADMIN_CODE no .env)" };
+      }
+      if (typeof codigoAdmin !== "string" || codigoAdmin !== esperado) {
+        throw { status: 403, mensagem: "Código de administrador inválido" };
+      }
+      ehAdmin = 1;
     }
 
     const emailExiste = await FuncionarioRepository.findByEmail(email);
@@ -36,6 +49,7 @@ class FuncionarioService {
       nome: nome.trim(),
       email: email.trim().toLowerCase(),
       senha_hash,
+      admin: ehAdmin,
     };
 
     const id = await FuncionarioRepository.create(novoFuncionario);
@@ -70,7 +84,11 @@ class FuncionarioService {
       sucesso: true,
       mensagem: "Login realizado com sucesso",
       token,
-      funcionario: { id: funcionario.id_funcionario, nome: funcionario.nome },
+      funcionario: {
+        id: funcionario.id_funcionario,
+        nome: funcionario.nome,
+        admin: !!funcionario.admin,
+      },
     };
   }
 
@@ -117,8 +135,9 @@ class FuncionarioService {
 
   async deletarFuncionario(id, idLogado) {
     if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-    if (Number(idLogado) !== Number(id)) {
-      throw { status: 403, mensagem: "Você só pode apagar o seu próprio cadastro" };
+    // a rota já exige admin; aqui só impede o admin de apagar a própria conta
+    if (Number(idLogado) === Number(id)) {
+      throw { status: 400, mensagem: "Você não pode apagar a sua própria conta" };
     }
     const existe = await FuncionarioRepository.findById(id);
     if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };

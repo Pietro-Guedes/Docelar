@@ -17,10 +17,10 @@ class FuncionarioRepository {
     }
 
     async create(funcionarioData) {
-        const { nome, email, senha_hash } = funcionarioData;
+        const { nome, email, senha_hash, admin = 0 } = funcionarioData;
         const [result] = await pool.query(
-            'INSERT INTO funcionario (nome, email, senha_hash) VALUES (?, ?, ?)',
-            [nome, email, senha_hash]
+            'INSERT INTO funcionario (nome, email, senha_hash, admin) VALUES (?, ?, ?, ?)',
+            [nome, email, senha_hash, admin ? 1 : 0]
         );
         return result.insertId;
     }
