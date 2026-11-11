@@ -6,7 +6,7 @@ import { salvarFuncionario } from '../api';
 import { mensagemErro } from '../utils';
 import './Login.css';
 
-const VAZIO = { nome: '', email: '', senha: '', confirmar: '' };
+const VAZIO = { nome: '', email: '', senha: '', confirmar: '', admin: false, codigoAdmin: '' };
 
 export default function Cadastro() {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export default function Cadastro() {
     if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'Informe um e-mail válido';
     if (form.senha.length < 6) e.senha = 'A senha precisa de pelo menos 6 caracteres';
     else if (form.confirmar !== form.senha) e.confirmar = 'As senhas não são iguais';
+    if (form.admin && !form.codigoAdmin) e.codigoAdmin = 'Informe o código de administrador';
     setErros(e);
     return !Object.keys(e).length;
   }
@@ -35,7 +36,10 @@ export default function Cadastro() {
     if (!validar()) return;
     setSalvando(true);
     try {
-      await salvarFuncionario({ nome: form.nome.trim(), email: form.email.trim(), senha: form.senha });
+      await salvarFuncionario({
+        nome: form.nome.trim(), email: form.email.trim(), senha: form.senha,
+        admin: form.admin, codigoAdmin: form.codigoAdmin,
+      });
       navigate('/login', { replace: true, state: { cadastrado: true } });
     } catch (err) {
       setErroGeral(mensagemErro(err));
@@ -103,6 +107,23 @@ export default function Cadastro() {
                 value={form.confirmar} onChange={set('confirmar')} autoComplete="new-password" />
             </div>
             {erros.confirmar && <small className="login-campo-erro">{erros.confirmar}</small>}
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 18, fontSize: 13 }}>
+              <input type="checkbox" checked={form.admin}
+                onChange={(e) => setForm((f) => ({ ...f, admin: e.target.checked, codigoAdmin: '' }))} />
+              Cadastrar como administrador
+            </label>
+            {form.admin && (
+              <>
+                <div className="input-icon" style={{ marginTop: 10 }}>
+                  <Lock size={17} />
+                  <input type="password" className="input" placeholder="Código de administrador"
+                    aria-label="Código de administrador" value={form.codigoAdmin}
+                    onChange={set('codigoAdmin')} autoComplete="off" />
+                </div>
+                {erros.codigoAdmin && <small className="login-campo-erro">{erros.codigoAdmin}</small>}
+              </>
+            )}
 
             {erroGeral && <div className="login-erro" style={{ marginTop: 18 }}>{erroGeral}</div>}
 
