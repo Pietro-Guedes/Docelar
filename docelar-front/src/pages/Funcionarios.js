@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UserPlus, Pencil, Trash2, Users, Save, X, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro, Loading } from '../components/ui';
 import { Avatar, useUsuario, usePageMeta } from '../components/Layout';
-import { listarFuncionarios, salvarFuncionario, excluirFuncionario } from '../api';
+import { listarFuncionariosAtivos, salvarFuncionario, excluirFuncionario } from '../api';
 import { useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
 
@@ -13,7 +13,7 @@ export default function Funcionarios() {
   const feedback = useFeedback();
   const { usuario } = useUsuario() || {};
   const isAdmin = !!usuario?.admin;
-  const { data, loading, error, reload } = useAsync(listarFuncionarios, []);
+  const { data, loading, error, reload } = useAsync(listarFuncionariosAtivos, []);
   const [form, setForm] = useState(VAZIO);
   const [verSenha, setVerSenha] = useState(false);
   const [erros, setErros] = useState({});
@@ -55,9 +55,10 @@ export default function Funcionarios() {
     setApagar(null);
     try {
       await excluirFuncionario(f.id);
+      feedback.mostrar('Funcionário desativado');
       reload();
     } catch (err) {
-      setErroGeral(`Não foi possível apagar: ${mensagemErro(err)}`);
+      setErroGeral(`Não foi possível desativar: ${mensagemErro(err)}`);
     }
   }
 
@@ -101,7 +102,7 @@ export default function Funcionarios() {
                           <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
                         )}
                         {isAdmin && usuario?.id !== f.id && (
-                          <button className="icon-btn danger" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
+                          <button className="icon-btn danger" onClick={() => setApagar(f)} title="Desativar funcionário" aria-label={`Desativar ${f.nome}`}><Trash2 size={16} /></button>
                         )}
                       </td>
                     </tr>
@@ -145,7 +146,7 @@ export default function Funcionarios() {
       </div>
 
       <Feedback {...feedback.props} />
-      <Confirm open={!!apagar} texto={`Remover o acesso de "${apagar?.nome}"?`} rotulo="Remover" onConfirm={confirmarApagar} onCancel={() => setApagar(null)} />
+      <Confirm open={!!apagar} texto={`Desativar o acesso de "${apagar?.nome}"? Ele não poderá mais entrar, mas as movimentações dele continuam salvas.`} rotulo="Desativar" onConfirm={confirmarApagar} onCancel={() => setApagar(null)} />
     </div>
   );
 }

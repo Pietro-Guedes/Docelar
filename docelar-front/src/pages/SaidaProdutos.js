@@ -3,7 +3,7 @@ import { ReceiptText, Truck, Wallet, Printer, Navigation, Save, Trash2, Notebook
 import AdicionarItem from '../components/AdicionarItem';
 import { Feedback, useFeedback, Thumb } from '../components/ui';
 import { usePageMeta } from '../components/Layout';
-import { listarFuncionarios, registrarSaida } from '../api';
+import { listarFuncionariosAtivos, registrarSaida } from '../api';
 import { dinheiro, mensagemErro } from '../utils';
 import './Movimentacao.css';
 
@@ -27,7 +27,7 @@ export default function SaidaProdutos() {
   const [erro, setErro] = useState('');
   const [versao, setVersao] = useState(0);
 
-  useEffect(() => { listarFuncionarios().then(setFuncionarios).catch(() => {}); }, []);
+  useEffect(() => { listarFuncionariosAtivos().then(setFuncionarios).catch(() => {}); }, []);
 
   const subtotal = useMemo(() => itens.reduce((s, i) => s + i.quantidade * i.valorUnitario, 0), [itens]);
   const total = subtotal + TAXA_EMBALAGEM;

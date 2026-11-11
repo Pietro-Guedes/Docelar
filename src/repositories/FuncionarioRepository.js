@@ -46,6 +46,12 @@ class FuncionarioRepository {
         return Number(r0.total) + Number(r1.total);
     }
 
+    // desativa sem apagar: o histórico (produtos e movimentações) continua ligado à pessoa
+    async desativar(id) {
+        const [result] = await pool.query('UPDATE funcionario SET ativo = 0 WHERE id_funcionario = ?', [id]);
+        return result.affectedRows;
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM funcionario WHERE id_funcionario = ?', [id]);
         return result.affectedRows;

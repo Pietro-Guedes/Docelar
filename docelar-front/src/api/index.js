@@ -17,7 +17,7 @@ export const limparCache = () => cache.clear();
 
 const toCategoria = (c) => ({ id: c.id_categoria, nome: c.nome_categoria ?? c.nome });
 const toFornecedor = (f) => ({ id: f.id_fornecedor, nome: f.nome, cnpj: f.cnpj || '', telefone: f.telefone || '', email: f.email || '' });
-const toFuncionario = (f) => ({ id: f.id_funcionario ?? f.id, nome: f.nome, email: f.email || '', admin: !!f.admin });
+const toFuncionario = (f) => ({ id: f.id_funcionario ?? f.id, nome: f.nome, email: f.email || '', admin: !!f.admin, ativo: f.ativo === undefined ? true : Number(f.ativo) !== 0 });
 const toLote = (l) => ({
   id: l.id_estoque,
   produtoId: l.id_produto,
@@ -84,6 +84,10 @@ export async function excluirFornecedor(id) {
 
 export const listarFuncionarios = () =>
   cacheado('funcionarios', async () => dados(await request('/funcionario')).map(toFuncionario));
+
+// só quem está ativo (telas de equipe e seletor de entregador).
+// O histórico de movimentações usa listarFuncionarios (todos) para mostrar o nome de quem já saiu.
+export const listarFuncionariosAtivos = () => listarFuncionarios().then((l) => l.filter((f) => f.ativo));
 
 export async function salvarFuncionario(f) {
   limparCache();

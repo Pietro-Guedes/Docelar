@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const FuncionarioRepository = require('../repositories/FuncionarioRepository');
 
-const verificarToken = (req, res, next) => {
+const verificarToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -16,14 +16,26 @@ const verificarToken = (req, res, next) => {
 
     const token = parts[1];
 
+    let decodificado;
     try {
-        const decodificado = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-        req.usuarioId = decodificado.id;
-        req.usuario = { id: decodificado.id, nome: decodificado.nome, email: decodificado.email }
-        return next();
+        decodificado = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
     } catch (err) {
         return res.status(401).json({ sucesso: false, mensagem: "Token inválido ou expirado" });
     }
+
+    // conta desativada perde o acesso na hora, mesmo com token ainda válido
+    try {
+        const funcionario = await FuncionarioRepository.findById(decodificado.id);
+        if (!funcionario || Number(funcionario.ativo) === 0) {
+            return res.status(401).json({ sucesso: false, mensagem: "Conta desativada ou inexistente" });
+        }
+    } catch (err) {
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao verificar o usuário" });
+    }
+
+    req.usuarioId = decodificado.id;
+    req.usuario = { id: decodificado.id, nome: decodificado.nome, email: decodificado.email };
+    return next();
 };
 
 // Deve vir depois de verificarToken. Consulta o banco a cada chamada, assim

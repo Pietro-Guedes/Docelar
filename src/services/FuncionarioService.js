@@ -41,7 +41,14 @@ class FuncionarioService {
     }
 
     const emailExiste = await FuncionarioRepository.findByEmail(email);
-    if (emailExiste) throw { status: 409, mensagem: "Email já cadastrado" };
+    if (emailExiste) {
+      throw {
+        status: 409,
+        mensagem: Number(emailExiste.ativo) === 0
+          ? "Este e-mail pertence a uma conta desativada"
+          : "Email já cadastrado",
+      };
+    }
 
     const senha_hash = await bcrypt.hash(senha, 10);
 
@@ -73,6 +80,8 @@ class FuncionarioService {
     const senhaCorreta = await bcrypt.compare(senha, funcionario.senha_hash);
     if (!senhaCorreta)
       throw { status: 401, mensagem: "Email ou senha inválidos" };
+    if (Number(funcionario.ativo) === 0)
+      throw { status: 403, mensagem: "Conta desativada. Fale com um administrador." };
 
     const token = jwt.sign(
       { id: funcionario.id_funcionario },
@@ -135,18 +144,19 @@ class FuncionarioService {
 
   async deletarFuncionario(id, idLogado) {
     if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-    // a rota já exige admin; aqui só impede o admin de apagar a própria conta
+    // a rota já exige admin; aqui só impede o admin de desativar a própria conta
     if (Number(idLogado) === Number(id)) {
-      throw { status: 400, mensagem: "Você não pode apagar a sua própria conta" };
+      throw { status: 400, mensagem: "Você não pode desativar a sua própria conta" };
     }
     const existe = await FuncionarioRepository.findById(id);
     if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };
-
-    if (await FuncionarioRepository.contarVinculos(id) > 0) {
-        throw { status: 409, mensagem: "Este funcionário tem produtos ou movimentações registradas no nome dele." };
+    if (Number(existe.ativo) === 0) {
+      throw { status: 409, mensagem: "Este funcionário já está desativado" };
     }
-    await FuncionarioRepository.delete(id);
-    return { sucesso: true, mensagem: "Funcionário apagado com sucesso" };
+
+    // não apaga: só desativa, para o histórico de produtos e movimentações continuar salvo
+    await FuncionarioRepository.desativar(id);
+    return { sucesso: true, mensagem: "Funcionário desativado com sucesso" };
   }
 }
 
