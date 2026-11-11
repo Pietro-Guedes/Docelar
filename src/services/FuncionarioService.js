@@ -27,6 +27,19 @@ class FuncionarioService {
       throw { status: 400, mensagem: "Senha deve ter no mínimo 6 caracteres" };
     }
 
+    // Conta admin só é criada com o código secreto definido em ADMIN_CODE (.env)
+    let ehAdmin = 0;
+    if (admin === true || admin === 1 || admin === "1") {
+      const esperado = process.env.ADMIN_CODE;
+      if (!esperado) {
+        throw { status: 403, mensagem: "Cadastro de administrador desativado (defina ADMIN_CODE no .env)" };
+      }
+      if (typeof codigoAdmin !== "string" || codigoAdmin !== esperado) {
+        throw { status: 403, mensagem: "Código de administrador inválido" };
+      }
+      ehAdmin = 1;
+    }
+
     const emailExiste = await FuncionarioRepository.findByEmail(email);
     if (emailExiste) throw { status: 409, mensagem: "Email já cadastrado" };
 
@@ -36,9 +49,7 @@ class FuncionarioService {
       nome: nome.trim(),
       email: email.trim().toLowerCase(),
       senha_hash,
-      // cadastro é público: nunca aceita "admin" vindo da requisição.
-      // Para promover alguém: UPDATE funcionario SET admin = 1 WHERE email = '...'
-      admin: 0,
+      admin: ehAdmin,
     };
 
     const id = await FuncionarioRepository.create(novoFuncionario);

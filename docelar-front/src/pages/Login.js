@@ -11,6 +11,8 @@ export default function Login() {
   const [modo, setModo] = useState('entrar'); // 'entrar' | 'cadastrar'
   const cadastro = modo === 'cadastrar';
   const [nome, setNome] = useState('');
+  const [souAdmin, setSouAdmin] = useState(false);
+  const [codigoAdmin, setCodigoAdmin] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [verSenha, setVerSenha] = useState(false);
@@ -26,7 +28,8 @@ export default function Login() {
       if (cadastro) {
         if (!nome.trim()) throw new Error('Informe o seu nome.');
         if (senha.length < 6) throw new Error('A senha precisa de pelo menos 6 caracteres.');
-        await salvarFuncionario({ nome: nome.trim(), email: email.trim(), senha });
+        if (souAdmin && !codigoAdmin) throw new Error('Informe o código de administrador.');
+        await salvarFuncionario({ nome: nome.trim(), email: email.trim(), senha, admin: souAdmin, codigoAdmin });
       }
       await login(email.trim(), senha, lembrar);
       navigate(location.state?.de || '/', { replace: true });
@@ -89,6 +92,22 @@ export default function Login() {
                 {verSenha ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
+
+            {cadastro && (
+              <div style={{ marginTop: 16 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                  <input type="checkbox" checked={souAdmin} onChange={(e) => setSouAdmin(e.target.checked)} />
+                  Cadastrar como administrador
+                </label>
+                {souAdmin && (
+                  <div className="input-icon" style={{ marginTop: 10 }}>
+                    <Lock size={17} />
+                    <input className="input" type="password" placeholder="Código de administrador" aria-label="Código de administrador"
+                      value={codigoAdmin} onChange={(e) => setCodigoAdmin(e.target.value)} autoComplete="off" />
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="login-opcoes">
               <label><input type="checkbox" checked={lembrar} onChange={(e) => setLembrar(e.target.checked)} /> Lembrar acesso</label>

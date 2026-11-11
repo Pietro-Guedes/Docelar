@@ -92,7 +92,7 @@ export async function salvarFuncionario(f) {
     if (f.senha) body.senha = f.senha;
     return request(`/funcionario/${f.id}`, { method: 'PUT', body });
   }
-  return request('/funcionario', { method: 'POST', body: { nome: f.nome, email: f.email, senha: f.senha } });
+  return request('/funcionario', { method: 'POST', body: { nome: f.nome, email: f.email, senha: f.senha, admin: !!f.admin, codigoAdmin: f.codigoAdmin } });
 }
 
 export async function excluirFuncionario(id) {
