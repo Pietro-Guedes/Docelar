@@ -6,22 +6,32 @@ const mockConn = {
 };
 
 jest.mock('../../src/config/database', () => ({ getConnection: jest.fn() }));
-jest.mock('../../src/repositories/MovimentacaoEstoqueRepository', () => ({ findByProduto: jest.fn(), create: jest.fn() }));
+jest.mock('../../src/repositories/MovimentacaoEstoqueRepository', () => ({
+  findByProduto: jest.fn(),
+  findById: jest.fn(),
+  findByIdParaAtualizar: jest.fn(),
+  findByGrupoTroca: jest.fn(),
+  findEstorno: jest.fn(),
+  create: jest.fn(),
+}));
 jest.mock('../../src/repositories/EstoqueRepository', () => ({
   findByProdutoOrdenadoPorValidade: jest.fn(),
   findByIdParaAtualizar: jest.fn(),
   update: jest.fn(),
 }));
 jest.mock('../../src/services/EstoqueService', () => ({ criarLote: jest.fn() }));
+jest.mock('../../src/repositories/ProdutoRepository', () => ({ findById: jest.fn() }));
 
 const pool = require('../../src/config/database');
 const movRepo = require('../../src/repositories/MovimentacaoEstoqueRepository');
 const estoqueRepo = require('../../src/repositories/EstoqueRepository');
 const estoqueService = require('../../src/services/EstoqueService');
+const produtoRepo = require('../../src/repositories/ProdutoRepository');
 const service = require('../../src/services/MovimentacaoEstoqueService');
 
 beforeEach(() => {
   pool.getConnection.mockResolvedValue(mockConn);
+  produtoRepo.findById.mockResolvedValue({ id_produto: 1, ativo: 1 });
 });
 
 describe('MovimentacaoEstoqueService', () => {
@@ -106,6 +116,12 @@ describe('MovimentacaoEstoqueService', () => {
       expect(r.movimentacoes).toHaveLength(1);
       expect(r.movimentacoes[0].id_estoque).toBe(2);
     });
+
+    it('bloqueia saída de produto desativado', async () => {
+      produtoRepo.findById.mockResolvedValue({ id_produto: 1, ativo: 0 });
+      await expect(service.registrarSaida({ id_produto: 1, quantidade: 1 }, 3)).rejects.toMatchObject({ status: 409 });
+      expect(pool.getConnection).not.toHaveBeenCalled();
+    });
   });
 
   describe('registrarDevolucao', () => {
@@ -131,6 +147,88 @@ describe('MovimentacaoEstoqueService', () => {
       expect(estoqueRepo.update).toHaveBeenCalledWith(1, { quantidade: 7 }, mockConn);
       expect(movRepo.create).toHaveBeenCalledWith(expect.objectContaining({ tipo: 'DEVOLUCAO', motivo_devolucao: 'Produto estragado' }), mockConn);
       expect(r.id_movimentacao).toBe(33);
+    });
+
+    describe('registrarTroca', () => {
+      it('registra a troca em uma transação e recusa estoque insuficiente', async () => {
+        estoqueRepo.findByIdParaAtualizar.mockResolvedValue({ id_estoque: 5, quantidade: 2 });
+        estoqueRepo.findByProdutoOrdenadoPorValidade.mockResolvedValue([{ id_estoque: 8, quantidade: 4 }]);
+        movRepo.create.mockResolvedValueOnce(51).mockResolvedValueOnce(52);
+
+        const resultado = await service.registrarTroca({
+          id_estoque_retorno: 5,
+          id_produto_saida: 1,
+          quantidade_retorno: 1,
+          quantidade_saida: 2,
+          observacao: 'Protocolo #2026-1000 · TROCA',
+        }, 3);
+
+        expect(estoqueRepo.update).toHaveBeenCalledWith(8, { quantidade: 2 }, mockConn);
+        expect(estoqueRepo.update).toHaveBeenCalledWith(5, { quantidade: 3 }, mockConn);
+        expect(mockConn.commit).toHaveBeenCalled();
+        expect(resultado.movimentacoes).toEqual([51, 52]);
+      });
+
+      it('faz rollback quando falta estoque de reposição', async () => {
+        estoqueRepo.findByIdParaAtualizar.mockResolvedValue({ id_estoque: 5, quantidade: 2 });
+        estoqueRepo.findByProdutoOrdenadoPorValidade.mockResolvedValue([{ id_estoque: 8, quantidade: 1 }]);
+        await expect(service.registrarTroca({
+          id_estoque_retorno: 5, id_produto_saida: 1, quantidade_retorno: 1, quantidade_saida: 2,
+        }, 3)).rejects.toMatchObject({ status: 400 });
+        expect(estoqueRepo.update).not.toHaveBeenCalled();
+        expect(mockConn.rollback).toHaveBeenCalled();
+      });
+    });
+
+    describe('registrarSaidaLoteVencido', () => {
+      it('registra baixa somente para lote vencido e dentro do saldo', async () => {
+        estoqueRepo.findByIdParaAtualizar.mockResolvedValue({
+          id_estoque: 5, quantidade: 4, validade: '2020-01-01', id_fornecedor: 7,
+        });
+        movRepo.create.mockResolvedValue(71);
+        const resultado = await service.registrarSaidaLoteVencido({
+          id_estoque: 5, quantidade: 2, tipo: 'DEVOLUCAO_FORNECEDOR', id_fornecedor: 7,
+        }, 3);
+        expect(estoqueRepo.update).toHaveBeenCalledWith(5, { quantidade: 2 }, mockConn);
+        expect(movRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+          tipo: 'SAIDA', motivo_devolucao: 'DEVOLUCAO_FORNECEDOR',
+        }), mockConn);
+        expect(resultado.id_movimentacao).toBe(71);
+      });
+    });
+
+    describe('estornarMovimentacao', () => {
+      it('recusa saldo insuficiente e não confirma o estorno', async () => {
+        movRepo.findById.mockResolvedValue({ id_movimentacao: 1, tipo: 'DEVOLUCAO', id_estoque: 5, quantidade: 3, observacao: '' });
+        movRepo.findByIdParaAtualizar.mockResolvedValue({ id_movimentacao: 1, tipo: 'DEVOLUCAO', id_estoque: 5, quantidade: 3, observacao: '' });
+        movRepo.findEstorno.mockResolvedValue(undefined);
+        estoqueRepo.findByIdParaAtualizar.mockResolvedValue({ id_estoque: 5, quantidade: 2 });
+        await expect(service.estornarMovimentacao(1, 3)).rejects.toMatchObject({ status: 409 });
+        expect(mockConn.rollback).toHaveBeenCalled();
+        expect(mockConn.commit).not.toHaveBeenCalled();
+      });
+
+      it('estorna juntos os dois lados de uma troca', async () => {
+        const grupo = 'GRUPO_TROCA:bb5bda2a-90b0-4bdb-9890-8aa61c000001';
+        const movimentos = [
+          { id_movimentacao: 1, tipo: 'SAIDA', id_estoque: 8, quantidade: 2, observacao: grupo },
+          { id_movimentacao: 2, tipo: 'DEVOLUCAO', id_estoque: 5, quantidade: 1, observacao: grupo },
+        ];
+        movRepo.findById.mockResolvedValue(movimentos[1]);
+        movRepo.findByGrupoTroca.mockResolvedValue(movimentos);
+        movRepo.findEstorno.mockResolvedValue(undefined);
+        estoqueRepo.findByIdParaAtualizar
+          .mockResolvedValueOnce({ id_estoque: 8, quantidade: 0 })
+          .mockResolvedValueOnce({ id_estoque: 5, quantidade: 3 });
+        movRepo.create.mockResolvedValueOnce(81).mockResolvedValueOnce(82);
+
+        const resultado = await service.estornarMovimentacao(2, 3);
+
+        expect(estoqueRepo.update).toHaveBeenNthCalledWith(1, 8, { quantidade: 2 }, mockConn);
+        expect(estoqueRepo.update).toHaveBeenNthCalledWith(2, 5, { quantidade: 2 }, mockConn);
+        expect(resultado.estornos).toEqual([81, 82]);
+        expect(mockConn.commit).toHaveBeenCalled();
+      });
     });
   });
 });

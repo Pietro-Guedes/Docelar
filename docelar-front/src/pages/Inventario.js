@@ -23,11 +23,13 @@ export default function Inventario() {
   const { data, loading, error, reload } = useAsync(carregar, []);
   const [apagar, setApagar] = useState(null);
   const [erroAcao, setErroAcao] = useState(null);
+  const [mostrarDesativados, setMostrarDesativados] = useState(false);
   const lotes = useAbertos();
 
-  const produtos = data?.produtos || [];
+  const produtos = useMemo(() => data?.produtos || [], [data]);
+  const produtosAtivos = produtos.filter((p) => p.ativo !== false);
   const filtrados = useMemo(() => {
-    let l = produtos;
+    let l = produtos.filter((p) => mostrarDesativados || p.ativo !== false);
     if (busca) {
       const q = busca.toLowerCase();
       l = l.filter((p) => p.nome.toLowerCase().includes(q) || p.codigo.includes(q) || p.categoria.toLowerCase().includes(q));
@@ -35,17 +37,17 @@ export default function Inventario() {
     if (status) l = l.filter((p) => statusDoProduto(p) === status);
     if (soAlertaValidade) l = l.filter((p) => lotesAtivos(p.lotes).some((x) => nivelEmAlerta(situacaoValidade(x.validade).nivel)));
     return l;
-  }, [produtos, busca, status, soAlertaValidade]);
+  }, [produtos, busca, status, soAlertaValidade, mostrarDesativados]);
   const pag = usePaginacao(filtrados, 8);
 
-  const valorTotal = produtos.reduce((s, p) => s + p.quantidade * p.valorUnitario, 0);
-  const itensTotais = produtos.reduce((s, p) => s + p.quantidade, 0);
-  const baixos = produtos.filter((p) => statusDoProduto(p) === 'baixo').length;
-  const criticos = produtos.filter((p) => statusDoProduto(p) === 'critico').length;
-  const niveis = produtos.flatMap((p) => lotesAtivos(p.lotes)).map((l) => situacaoValidade(l.validade).nivel);
+  const valorTotal = produtosAtivos.reduce((s, p) => s + p.quantidade * p.valorUnitario, 0);
+  const itensTotais = produtosAtivos.reduce((s, p) => s + p.quantidade, 0);
+  const baixos = produtosAtivos.filter((p) => statusDoProduto(p) === 'baixo').length;
+  const criticos = produtosAtivos.filter((p) => statusDoProduto(p) === 'critico').length;
+  const niveis = produtosAtivos.flatMap((p) => lotesAtivos(p.lotes)).map((l) => situacaoValidade(l.validade).nivel);
   const lotesVencidos = niveis.filter((n) => n === 'vencido').length;
   const lotesVencendo = niveis.filter((n) => n === 'urgente' || n === 'atencao').length;
-  const categoriasAtivas = new Set(produtos.map((p) => p.categoriaId).filter(Boolean)).size;
+  const categoriasAtivas = new Set(produtosAtivos.map((p) => p.categoriaId).filter(Boolean)).size;
 
   function filtrarStatus(s) {
     const n = new URLSearchParams(params);
@@ -113,6 +115,9 @@ export default function Inventario() {
               ))}
             </div>
             <div className="page-actions no-print">
+              <button className={`btn ${mostrarDesativados ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMostrarDesativados((v) => !v)}>
+                {mostrarDesativados ? 'Ocultar desativados' : 'Mostrar desativados'}
+              </button>
               <button className="btn btn-ghost" onClick={() => window.print()}><Printer size={17} /> Imprimir Relatório</button>
               <button className="btn btn-primary" onClick={() => navigate('/produtos/novo')}><Plus size={16} /> Novo Produto</button>
             </div>
@@ -138,7 +143,7 @@ export default function Inventario() {
                     const aberto = lotes.aberto(p.id);
                     return (
                       <Fragment key={p.id}>
-                      <tr className={`linha-produto ${aberto ? 'aberta' : ''}`} onClick={() => lotes.alternar(p.id)}>
+                      <tr className={`linha-produto ${aberto ? 'aberta' : ''}`} onClick={() => lotes.alternar(p.id)} style={p.ativo !== false ? undefined : { opacity: 0.62 }}>
                         <td>
                           <BotaoLotes aberto={aberto} nome={p.nome} onClick={(e) => { e.stopPropagation(); lotes.alternar(p.id); }}>
                             <div className="prod-cell strong"><Thumb src={p.imagem} alt={p.nome} />{p.nome}</div>
@@ -148,7 +153,7 @@ export default function Inventario() {
                         <td style={{ color: s === 'ok' ? 'var(--texto)' : 'var(--critico)', fontWeight: 600 }}>{numero(p.quantidade)} {p.unidade}</td>
                         <td><ValidadeResumo produto={p} /></td>
                         <td className="num strong">{dinheiro(p.quantidade * p.valorUnitario)}</td>
-                        <td className="center"><StatusBadge status={s} /></td>
+                        <td className="center">{p.ativo !== false ? <StatusBadge status={s} /> : <span className="badge badge-alerta">Desativado</span>}</td>
                         <td className="center no-print" onClick={(e) => e.stopPropagation()}>
                           <Link className="icon-btn" to={`/produtos/${p.id}`} aria-label={`Editar ${p.nome}`}><Pencil size={16} /></Link>
                           <button className="icon-btn danger" onClick={() => setApagar(p)} aria-label={`Apagar ${p.nome}`}><Trash2 size={16} /></button>

@@ -15,6 +15,8 @@
 - Front: **#27** título no topo de todas as telas, **#28** `<h1>` no Inventário, **#29** "Lembrar acesso" desmarcado usa `sessionStorage`, **#30** sai sozinho quando o token vence e o 401 volta ao login sem recarregar a página, **#31** apaga as fotos antigas ao trocar, **#32** a tela de Funcionários só mostra os botões no próprio cadastro.
 - **#26** nova tela **Categorias** (no menu): cadastrar, editar e apagar. Para a edição funcionar, corrigi o `CategoriaService`, que gravava na coluna `nome` (o nome certo é `nome_categoria`) e dava erro 500.
 - **#33** o entregador da saída vai no campo `id_entregador`, e não mais escrito na observação. **Banco já existente: rode uma vez `banco/entregador.sql`** (o `criar_tabela.sql` já vem com a coluna).
+- Produtos podem ser desativados sem apagar seus lotes ou movimentações. Para persistir esse status em banco existente, rode uma vez `banco/produto_ativo.sql`.
+- Trocas de clientes são gravadas em uma única transação; devoluções ao fornecedor e baixas de lotes vencidos ficam registradas como saídas específicas. O histórico permite estornar essas operações, desde que o saldo do lote ainda permita a reversão.
 
 
 Tudo o que mudou em relação à versão que estava no zip. Testei com um banco MySQL (MariaDB) de teste: cadastro e login de funcionário, fornecedor, produto, entrada, saída (inclusive com saldo insuficiente), devolução, lotes, vencidos, upload de imagem. Também testei com o front ligado.
@@ -63,11 +65,6 @@ git push
 ```
 
 Se o repositório for público, **troque a senha do usuário do MySQL**. A senha antiga continua no histórico do GitHub.
-
-## Para o grupo decidir (não mexi)
-
-- **A devolução não devolve a quantidade ao lote**: só registra a movimentação. Se o produto devolvido volta para venda, é preciso somar no lote. Se for descartado, está certo como está.
-- **Não existe rota que liste todas as movimentações**: o front busca produto por produto. Funciona, mas uma rota `GET /movimentacaoestoque` deixaria a tela principal e os relatórios mais rápidos.
 
 ## Como rodar
 

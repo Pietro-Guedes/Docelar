@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Info, Package, ImagePlus, Image as ImageIcon, CircleCheck, RotateCcw, Eye, Trash2, Lightbulb } from 'lucide-react';
+import { Info, Package, ImagePlus, Image as ImageIcon, CircleCheck, RotateCcw, Eye, Trash2, Lightbulb, Power } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro } from '../components/ui';
 import { usePageMeta } from '../components/Layout';
-import { buscarProduto, salvarProduto, excluirProduto, listarCategorias, listarFornecedores, codigoProduto, ESTOQUE_MINIMO_PADRAO } from '../api';
+import { buscarProduto, salvarProduto, excluirProduto, atualizarStatusProduto, listarCategorias, listarFornecedores, codigoProduto, ESTOQUE_MINIMO_PADRAO } from '../api';
 import { dinheiro, mensagemErro, dataMinimaValidade, erroDeValidade } from '../utils';
 import './CadastroProduto.css';
 
@@ -27,6 +27,7 @@ export default function CadastroProduto() {
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState(null);
   const [confirmar, setConfirmar] = useState(false);
+  const [confirmarStatus, setConfirmarStatus] = useState(false);
   const feedback = useFeedback();
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function CadastroProduto() {
   const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e.target.value }));
   const qtd = produto ? produto.quantidade : Number(form.quantidadeInicial) || 0;
   const total = qtd * (Number(form.valorUnitario) || 0);
+  const produtoAtivo = produto?.ativo !== false;
 
   function escolherImagem(e) {
     const file = e.target.files?.[0];
@@ -108,11 +110,24 @@ export default function CadastroProduto() {
     }
   }
 
+  async function mudarStatus() {
+    setConfirmarStatus(false);
+    setErroGeral(null);
+    try {
+      await atualizarStatusProduto(produto.id, !produtoAtivo);
+      feedback.mostrar(produtoAtivo ? 'Produto desativado' : 'Produto reativado');
+      carregar();
+    } catch (err) {
+      setErroGeral(new Error(mensagemErro(err)));
+    }
+  }
+
   return (
     <div className="page">
       <div>
         <div className="breadcrumb">Inventário <span style={{ color: 'var(--vinho)' }}>›</span> <b>{produto ? produto.nome : 'Novo Produto'}</b></div>
         <h1 className="page-title">{produto ? 'Editar Produto' : 'Cadastro de Produto'}</h1>
+        {produto && <span className={`badge ${produtoAtivo ? 'badge-ok' : 'badge-alerta'}`}>{produtoAtivo ? 'Ativo' : 'Desativado'}</span>}
         <p className="page-subtitle">Insira os detalhes técnicos de sua criação artesanal. Mantenha seu catálogo sempre atualizado para uma gestão impecável.</p>
       </div>
 
@@ -212,6 +227,11 @@ export default function CadastroProduto() {
           <button className="btn btn-outline btn-lg btn-block" onClick={carregar} disabled={salvando}>
             <RotateCcw size={16} /> {produto ? 'Desfazer alterações' : 'Limpar formulário'}
           </button>
+          {produto && (
+            <button className="btn btn-outline btn-lg btn-block" onClick={() => setConfirmarStatus(true)} disabled={salvando}>
+              <Power size={16} /> {produtoAtivo ? 'Desativar produto' : 'Reativar produto'}
+            </button>
+          )}
           <div className="acoes-mini">
             <button className="btn btn-outline-marrom" onClick={() => navigate('/inventario')}><Eye size={15} /> Consultar</button>
             <button className="btn btn-outline" disabled={!produto} onClick={() => setConfirmar(true)}><Trash2 size={15} /> Apagar</button>
@@ -226,6 +246,16 @@ export default function CadastroProduto() {
 
       <Feedback {...feedback.props} />
       <Confirm open={confirmar} texto={`Apagar "${produto?.nome}"? Essa ação não pode ser desfeita.`} onConfirm={apagar} onCancel={() => setConfirmar(false)} />
+      <Confirm
+        open={confirmarStatus}
+        titulo={produtoAtivo ? 'Desativar produto?' : 'Reativar produto?'}
+        rotulo={produtoAtivo ? 'Desativar' : 'Reativar'}
+        texto={produtoAtivo
+          ? `Desativar "${produto?.nome}" impede novas entradas e saídas, mas mantém os lotes e todo o histórico. Você pode reativá-lo depois.`
+          : `Reativar "${produto?.nome}" permite voltar a movimentá-lo. O histórico e os lotes existentes serão mantidos.`}
+        onConfirm={mudarStatus}
+        onCancel={() => setConfirmarStatus(false)}
+      />
     </div>
   );
 }

@@ -145,6 +145,7 @@ export const listarProdutos = () =>
         categoria: cat?.nome || 'Sem categoria',
         fornecedorId: p.id_fornecedor,
         fornecedor: forn?.nome || '',
+        ativo: p.ativo === undefined ? true : Number(p.ativo) !== 0,
         funcionarioId: p.id_funcionario,
         minimo: p.estoque_minimo != null ? num(p.estoque_minimo) : ESTOQUE_MINIMO_PADRAO,
         quantidade: meusLotes.reduce((s, l) => s + l.quantidade, 0),
@@ -210,6 +211,14 @@ export async function excluirProduto(id) {
   return request(`/produtos/${id}`, { method: 'DELETE' });
 }
 
+export async function atualizarStatusProduto(id, ativo) {
+  try {
+    return await request(`/produtos/${id}/status`, { method: 'PUT', body: { ativo } });
+  } finally {
+    limparCache();
+  }
+}
+
 export const listarMovimentacoes = () =>
   cacheado('movimentacoes', async () => {
     const [produtos, funcionarios] = await Promise.all([listarProdutos(), listarFuncionarios().catch(() => [])]);
@@ -220,7 +229,7 @@ export const listarMovimentacoes = () =>
           .catch(() => []),
       ),
     );
-    return porProduto
+    const movimentacoes = porProduto
       .flat()
       .map(({ m, p }) => {
         const valorUnit = m.valor_unitario != null ? num(m.valor_unitario) : p.valorUnitario;
@@ -242,6 +251,16 @@ export const listarMovimentacoes = () =>
           imagem: p.imagem,
         };
       })
+    const estornados = new Set(movimentacoes
+      .map((m) => m.observacao.match(/ESTORNO_MOVIMENTACAO:(\d+)/)?.[1])
+      .filter(Boolean)
+      .map(Number));
+    return movimentacoes
+      .map((m) => ({
+        ...m,
+        estornoDe: Number(m.observacao.match(/ESTORNO_MOVIMENTACAO:(\d+)/)?.[1]) || null,
+        estornada: estornados.has(m.id),
+      }))
       .sort((a, b) => String(b.data).localeCompare(String(a.data)));
   });
 
@@ -310,8 +329,55 @@ export async function registrarDevolucao(d) {
   }
 }
 
+export async function registrarTroca(troca) {
+  try {
+    return await request('/movimentacaoestoque/troca', {
+      method: 'POST',
+      body: {
+        id_estoque_retorno: Number(troca.loteRetornoId),
+        id_produto_saida: Number(troca.produtoSaidaId),
+        quantidade_retorno: Number(troca.quantidadeRetorno),
+        quantidade_saida: Number(troca.quantidadeSaida),
+        observacao: troca.observacao || null,
+      },
+    });
+  } finally {
+    limparCache();
+  }
+}
+
+export async function registrarSaidaLoteVencido(dados) {
+  try {
+    return await request('/movimentacaoestoque/saida-lote-vencido', {
+      method: 'POST',
+      body: {
+        id_estoque: Number(dados.loteId),
+        quantidade: Number(dados.quantidade),
+        tipo: dados.tipo,
+        id_fornecedor: dados.fornecedorId ? Number(dados.fornecedorId) : null,
+        observacao: dados.observacao || null,
+      },
+    });
+  } finally {
+    limparCache();
+  }
+}
+
+export async function estornarMovimentacao(id) {
+  try {
+    return await request(`/movimentacaoestoque/${id}/estorno`, { method: 'POST' });
+  } finally {
+    limparCache();
+  }
+}
+
 export async function listarDevolucoes() {
-  return (await listarMovimentacoes()).filter((m) => m.tipo === 'DEVOLUCAO');
+  return (await listarMovimentacoes()).filter((m) => !m.estornoDe && (
+    m.tipo === 'DEVOLUCAO'
+    || m.motivo === 'DEVOLUCAO_FORNECEDOR'
+    || m.motivo === 'BAIXA_VENCIMENTO'
+    || (m.tipo === 'SAIDA' && /\bTROCA\b/.test(m.observacao))
+  ));
 }
 
 const DIA = 86400000;
@@ -325,26 +391,30 @@ export function statusDoProduto(p) {
 }
 
 function descreverMov(m) {
+  if (m.estornoDe) return `Estorno registrado: ${m.produto} (${m.quantidade}).`;
   if (m.tipo === 'ENTRADA') return `Entrada de estoque: ${m.produto} (${m.quantidade}).`;
+  if (m.motivo === 'DEVOLUCAO_FORNECEDOR') return `Devolução ao fornecedor: ${m.produto} (${m.quantidade}).`;
+  if (m.motivo === 'BAIXA_VENCIMENTO') return `Baixa por vencimento: ${m.produto} (${m.quantidade}).`;
   if (m.tipo === 'SAIDA') return `Saída registrada: ${m.produto} (${m.quantidade}).`;
   return `Devolução processada: ${m.produto} (${m.quantidade}).`;
 }
 
 export async function getDashboard() {
   const [produtos, movs] = await Promise.all([listarProdutos(), listarMovimentacoes().catch(() => [])]);
+  const produtosAtivos = produtos.filter((p) => p.ativo !== false);
   const hoje = new Date();
   const lotes = produtos.flatMap((p) => p.lotes.map((l) => ({ ...l, produto: p.nome })));
   const ativos = lotes.filter((l) => l.quantidade > 0 && l.validade);
   return {
-    totalItens: produtos.reduce((s, p) => s + p.quantidade, 0),
-    totalProdutos: produtos.length,
-    criticos: produtos.filter((p) => statusDoProduto(p) === 'critico').length,
-    baixos: produtos.filter((p) => statusDoProduto(p) === 'baixo').length,
-    saidasHoje: movs.filter((m) => m.tipo === 'SAIDA' && mesmoDia(m.data, hoje)).reduce((s, m) => s + m.quantidade, 0),
+    totalItens: produtosAtivos.reduce((s, p) => s + p.quantidade, 0),
+    totalProdutos: produtosAtivos.length,
+    criticos: produtosAtivos.filter((p) => statusDoProduto(p) === 'critico').length,
+    baixos: produtosAtivos.filter((p) => statusDoProduto(p) === 'baixo').length,
+    saidasHoje: movs.filter((m) => m.tipo === 'SAIDA' && !m.estornoDe && !m.estornada && mesmoDia(m.data, hoje)).reduce((s, m) => s + m.quantidade, 0),
     vencidos: ativos.filter((l) => new Date(l.validade) < hoje).length,
     vencendo: ativos.filter((l) => { const d = new Date(l.validade); return d >= hoje && d - hoje <= 7 * DIA; }).length,
     atividades: movs.slice(0, 5).map((m) => ({ tipo: m.tipo, titulo: descreverMov(m), data: m.data })),
-    percepcoes: [...produtos]
+    percepcoes: [...produtosAtivos]
       .filter((p) => p.minimo > 0)
       .sort((a, b) => a.quantidade / a.minimo - b.quantidade / b.minimo)
       .slice(0, 2)
@@ -356,7 +426,7 @@ const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'O
 
 export async function getRelatorio(dias = 30) {
   const [produtos, movs] = await Promise.all([listarProdutos(), listarMovimentacoes()]);
-  const saidas = movs.filter((m) => m.tipo === 'SAIDA');
+  const saidas = movs.filter((m) => m.tipo === 'SAIDA' && !m.estornoDe && !m.estornada && !['DEVOLUCAO_FORNECEDOR', 'BAIXA_VENCIMENTO'].includes(m.motivo));
   const soma = (l) => l.reduce((s, m) => s + m.valorTotal, 0);
 
   const saidas30 = saidas.filter((m) => dentroDe(m.data, dias));
@@ -373,7 +443,7 @@ export async function getRelatorio(dias = 30) {
     return {
       mes: MESES[d.getMonth()],
       saidas: soma(saidas.filter(doMes)),
-      entradas: soma(movs.filter((m) => m.tipo === 'ENTRADA' && doMes(m))),
+      entradas: soma(movs.filter((m) => m.tipo === 'ENTRADA' && !m.estornoDe && !m.estornada && doMes(m))),
     };
   });
 
@@ -390,7 +460,9 @@ export async function getRelatorio(dias = 30) {
     variacaoVendas: vendasAnterior ? Math.round(((vendas30 - vendasAnterior) / vendasAnterior) * 100) : null,
     giroEstoque: estoqueTotal ? qtdSaida30 / estoqueTotal : 0,
     rupturas: produtos.filter((p) => statusDoProduto(p) === 'critico').length,
-    devolucoes30: movs.filter((m) => m.tipo === 'DEVOLUCAO' && dentroDe(m.data, dias)).length,
+    devolucoes30: movs.filter((m) => !m.estornoDe && !m.estornada && (
+      m.tipo === 'DEVOLUCAO' || m.motivo === 'DEVOLUCAO_FORNECEDOR'
+    ) && dentroDe(m.data, dias)).length,
     giroPorMes: estoqueTotal ? (qtdSaida30 / estoqueTotal) * (30 / dias) : 0,
     valorEmEstoque: produtos.reduce((s, p) => s + p.quantidade * p.valorUnitario, 0),
     mensal,

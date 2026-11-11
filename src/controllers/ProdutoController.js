@@ -52,6 +52,21 @@ class ProdutoController {
     }
   }
 
+  async atualizarStatus(req, res) {
+    try {
+      const resultado = await ProdutoService.atualizarStatusProduto(
+        req.params.id,
+        req.body.ativo,
+      );
+      res.json(resultado);
+    } catch (erro) {
+      console.error(erro);
+      res
+        .status(erro.status || 500)
+        .json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
+    }
+  }
+
   async deletar(req, res) {
     try {
       const resultado = await ProdutoService.deletarProduto(req.params.id);

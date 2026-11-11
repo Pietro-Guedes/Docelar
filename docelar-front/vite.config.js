@@ -9,7 +9,7 @@ function jsxEmArquivosJs() {
     name: 'jsx-em-arquivos-js',
     enforce: 'pre',
     async transform(code, id) {
-      if (!/\/src\/.*\.js$/.test(id.split('?')[0])) return null;
+      if (!/(?:^|[\\/])src[\\/].*\.js$/.test(id.split('?')[0])) return null;
       return transformWithOxc(code, id, { lang: 'jsx', jsx: { runtime: 'automatic' } });
     },
   };
@@ -18,4 +18,8 @@ function jsxEmArquivosJs() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [jsxEmArquivosJs(), react()],
+  optimizeDeps: {
+    noDiscovery: true,
+    include: ['react', 'react-dom', 'react-dom/client', 'react-router-dom', 'lucide-react'],
+  },
 })

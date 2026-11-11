@@ -10,6 +10,7 @@ const diasAtras = (n, h = 9) => {
   return d.toISOString();
 };
 const dataISO = (n) => diasAtras(n).slice(0, 10);
+const vencido = (validade) => validade && String(validade).slice(0, 10) < new Date().toISOString().slice(0, 10);
 
 const db = {
   categoria: [
@@ -59,7 +60,7 @@ const db = {
   Object.entries(saldos).forEach(([idp, saldo]) => {
     const p = db.produto.find((x) => x.id_produto === Number(idp));
     const id_estoque = ++idL;
-    db.estoque.push({ id_estoque, id_produto: p.id_produto, id_fornecedor: p.id_fornecedor, quantidade: saldo, validade: dataISO(-20 - idL), data_entrada: diasAtras(150) });
+    db.estoque.push({ id_estoque, id_produto: p.id_produto, id_fornecedor: p.id_fornecedor, quantidade: saldo, validade: p.id_produto === 1 ? dataISO(5) : dataISO(-20 - idL), data_entrada: diasAtras(150) });
     // saídas espalhadas nos últimos 5 meses (pão francês e saco kraft saem bem mais)
     const giro = { 4: 9, 14: 6, 7: 4, 1: 3, 5: 3 }[p.id_produto] || 1;
     const dias = [140, 112, 85, 58, 31, 12, 4, 1, 0];
@@ -213,8 +214,16 @@ export async function mockRequest(path, { method = 'GET', body, headers = {} }) 
       break;
 
     case 'produtos':
+      if (b === 'status' && method === 'PUT') {
+        exigeToken(headers);
+        const produto = db.produto.find((p) => p.id_produto === Number(a));
+        if (!produto) falha(404, 'Produto não encontrado');
+        if (typeof body.ativo !== 'boolean') falha(400, 'O status ativo deve ser verdadeiro ou falso');
+        produto.ativo = body.ativo ? 1 : 0;
+        return { sucesso: true, mensagem: body.ativo ? 'Produto reativado com sucesso' : 'Produto desativado com sucesso' };
+      }
       if (method === 'GET') return id ? produtos.buscar(id) : produtos.listar();
-      if (method === 'POST') return produtos.criar(body);
+      if (method === 'POST') return produtos.criar({ ...body, ativo: 1 });
       if (method === 'PUT') return produtos.atualizar(id, body);
       if (method === 'DELETE') return produtos.apagar(id);
       break;
@@ -238,6 +247,9 @@ export async function mockRequest(path, { method = 'GET', body, headers = {} }) 
         return lista(movs);
       }
       if (a === 'entrada') {
+        const produto = db.produto.find((p) => p.id_produto === Number(body.id_produto));
+        if (!produto) falha(404, 'Produto não encontrado');
+        if (Number(produto.ativo) === 0) falha(409, 'Produto desativado. Reative-o antes de movimentar o estoque.');
         if (!(body.quantidade > 0)) falha(400, 'Quantidade deve ser um número positivo');
         const id_estoque = novoId('estoque');
         db.estoque.push({ id_estoque, id_produto: body.id_produto, id_fornecedor: body.id_fornecedor || null, quantidade: body.quantidade, validade: body.validade || null, data_entrada: new Date().toISOString() });
@@ -245,6 +257,9 @@ export async function mockRequest(path, { method = 'GET', body, headers = {} }) 
         return { sucesso: true, mensagem: 'Entrada registrada com sucesso', id_movimentacao, id_estoque };
       }
       if (a === 'saida') {
+        const produto = db.produto.find((p) => p.id_produto === Number(body.id_produto));
+        if (!produto) falha(404, 'Produto não encontrado');
+        if (Number(produto.ativo) === 0) falha(409, 'Produto desativado. Reative-o antes de movimentar o estoque.');
         if (!(body.quantidade > 0)) falha(400, 'Quantidade deve ser um número positivo');
         const lotes = db.estoque.filter((l) => l.id_produto === body.id_produto && l.quantidade > 0)
           .sort((x, y) => String(x.validade).localeCompare(String(y.validade)));
@@ -265,9 +280,82 @@ export async function mockRequest(path, { method = 'GET', body, headers = {} }) 
         if (!body.id_estoque) falha(400, 'Lote é obrigatório');
         if (!(body.quantidade > 0)) falha(400, 'Quantidade deve ser um número positivo');
         if (!body.motivo_devolucao) falha(400, 'Motivo da devolução é obrigatório');
-        if (!db.estoque.some((l) => l.id_estoque === Number(body.id_estoque))) falha(404, 'Lote não encontrado');
+        const lote = db.estoque.find((l) => l.id_estoque === Number(body.id_estoque));
+        if (!lote) falha(404, 'Lote não encontrado');
+        lote.quantidade += Number(body.quantidade);
         const id_movimentacao = movimentar('DEVOLUCAO', body, idFunc, Number(body.id_estoque), body.quantidade);
         return { sucesso: true, mensagem: 'Devolução registrada com sucesso', id_movimentacao };
+      }
+      if (a === 'troca') {
+        const loteRetorno = db.estoque.find((l) => l.id_estoque === Number(body.id_estoque_retorno));
+        if (!loteRetorno) falha(404, 'Lote devolvido não encontrado');
+        const produtoSaida = db.produto.find((p) => p.id_produto === Number(body.id_produto_saida));
+        if (!produtoSaida) falha(404, 'Produto de reposição não encontrado');
+        if (Number(produtoSaida.ativo) === 0) falha(409, 'Produto de reposição desativado');
+        if (!(body.quantidade_retorno > 0) || !(body.quantidade_saida > 0)) falha(400, 'As quantidades da troca devem ser números positivos');
+
+        const lotes = db.estoque.filter((l) => l.id_produto === produtoSaida.id_produto && l.quantidade > 0)
+          .sort((x, y) => String(x.validade).localeCompare(String(y.validade)));
+        const saldo = lotes.reduce((s, l) => s + l.quantidade, 0);
+        if (saldo < body.quantidade_saida) falha(400, `Saldo insuficiente para o produto de reposição. Disponível: ${saldo}`);
+
+        const grupo = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+        const observacao = `GRUPO_TROCA:${grupo} · ${body.observacao || ''}`;
+        let restante = Number(body.quantidade_saida);
+        const movimentacoes = [];
+        for (const l of lotes) {
+          if (restante <= 0) break;
+          const consumida = Math.min(l.quantidade, restante);
+          l.quantidade -= consumida;
+          movimentacoes.push(movimentar('SAIDA', { ...body, observacao }, idFunc, l.id_estoque, consumida));
+          restante -= consumida;
+        }
+        loteRetorno.quantidade += Number(body.quantidade_retorno);
+        movimentacoes.push(movimentar('DEVOLUCAO', {
+          ...body, observacao, motivo_devolucao: 'Troca de produto',
+        }, idFunc, loteRetorno.id_estoque, Number(body.quantidade_retorno)));
+        return { sucesso: true, mensagem: 'Troca registrada com sucesso', movimentacoes };
+      }
+      if (a === 'saida-lote-vencido') {
+        const lote = db.estoque.find((l) => l.id_estoque === Number(body.id_estoque));
+        if (!lote) falha(404, 'Lote não encontrado');
+        if (!vencido(lote.validade)) falha(400, 'Apenas lotes vencidos podem ser devolvidos ou baixados por esta ação');
+        if (!(body.quantidade > 0) || body.quantidade > lote.quantidade) falha(400, `Quantidade maior que o saldo do lote. Disponível: ${lote.quantidade}`);
+        if (body.tipo === 'DEVOLUCAO_FORNECEDOR' && (!lote.id_fornecedor || Number(body.id_fornecedor) !== Number(lote.id_fornecedor))) {
+          falha(400, 'A devolução deve ser vinculada ao fornecedor de origem do lote');
+        }
+        if (!['DEVOLUCAO_FORNECEDOR', 'BAIXA_VENCIMENTO'].includes(body.tipo)) falha(400, 'Escolha devolução ao fornecedor ou baixa por vencimento');
+        lote.quantidade -= Number(body.quantidade);
+        const id_movimentacao = movimentar('SAIDA', { ...body, motivo_devolucao: body.tipo }, idFunc, lote.id_estoque, Number(body.quantidade));
+        return { sucesso: true, mensagem: 'Movimentação de lote vencido registrada', id_movimentacao };
+      }
+      if (b === 'estorno' && method === 'POST') {
+        const original = db.movimentacao_estoque.find((m) => m.id_movimentacao === Number(a));
+        if (!original) falha(404, 'Movimentação não encontrada');
+        if (String(original.observacao || '').startsWith('ESTORNO_MOVIMENTACAO:')) falha(400, 'Esta movimentação não pode ser estornada');
+        const grupo = original.observacao?.match(/GRUPO_TROCA:([0-9a-f-]+)/i)?.[1];
+        const originais = grupo
+          ? db.movimentacao_estoque.filter((m) => m.observacao?.includes(`GRUPO_TROCA:${grupo}`))
+          : [original];
+        if (originais.some((m) => !['ENTRADA', 'SAIDA', 'DEVOLUCAO'].includes(m.tipo))) falha(400, 'Tipo de movimentação não pode ser estornado');
+        if (originais.some((m) => db.movimentacao_estoque.some((x) => x.observacao?.includes(`ESTORNO_MOVIMENTACAO:${m.id_movimentacao} ·`)))) {
+          falha(409, 'Esta movimentação já foi estornada');
+        }
+        const lotesOriginais = originais.map((m) => {
+          const lote = db.estoque.find((l) => l.id_estoque === m.id_estoque);
+          if (!lote) falha(404, 'Lote vinculado à movimentação não encontrado');
+          const saiDoEstoque = m.tipo === 'ENTRADA' || m.tipo === 'DEVOLUCAO';
+          if (saiDoEstoque && lote.quantidade < m.quantidade) falha(409, `Saldo insuficiente no lote para estornar a movimentação #${m.id_movimentacao}`);
+          return { m, lote, saiDoEstoque };
+        });
+        const estornos = [];
+        for (const { m, lote, saiDoEstoque } of lotesOriginais) {
+          lote.quantidade += saiDoEstoque ? -m.quantidade : m.quantidade;
+          estornos.push(movimentar(saiDoEstoque ? 'SAIDA' : 'ENTRADA', {
+            observacao: `ESTORNO_MOVIMENTACAO:${m.id_movimentacao} · Estorno da movimentação #${m.id_movimentacao}`,
+          }, idFunc, m.id_estoque, m.quantidade));
+        }
+        return { sucesso: true, mensagem: 'Movimentação estornada com sucesso', estornos };
       }
       break;
     }

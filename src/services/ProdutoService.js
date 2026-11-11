@@ -88,6 +88,15 @@ class ProdutoService {
         return { sucesso: true, mensagem: "Produto atualizado com sucesso" };
     }
 
+    async atualizarStatusProduto(id, ativo) {
+        if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
+        if (typeof ativo !== "boolean") throw { status: 400, mensagem: "O status ativo deve ser verdadeiro ou falso" };
+        const existe = await ProdutoRepository.findById(id);
+        if (!existe) throw { status: 404, mensagem: "Produto não encontrado" };
+        await ProdutoRepository.atualizarAtivo(id, ativo);
+        return { sucesso: true, mensagem: ativo ? "Produto reativado com sucesso" : "Produto desativado com sucesso" };
+    }
+
     async deletarProduto(id) {
         if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
         const existe = await ProdutoRepository.findById(id);

@@ -55,6 +55,45 @@ class MovimentacaoEstoqueController {
             res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
         }
     }
+
+    async troca(req, res) {
+        try {
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+            const resultado = await MovimentacaoEstoqueService.registrarTroca(req.body, id_funcionario);
+            res.status(201).json(resultado);
+        } catch (erro) {
+            res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
+        }
+    }
+
+    async saidaLoteVencido(req, res) {
+        try {
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+            const resultado = await MovimentacaoEstoqueService.registrarSaidaLoteVencido(req.body, id_funcionario);
+            res.status(201).json(resultado);
+        } catch (erro) {
+            res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
+        }
+    }
+
+    async estornar(req, res) {
+        try {
+            const id_funcionario = req.usuario?.id || req.body.id_funcionario;
+            if (!id_funcionario) {
+                return res.status(400).json({ sucesso: false, mensagem: "Funcionário (id_funcionario) é obrigatório." });
+            }
+            const resultado = await MovimentacaoEstoqueService.estornarMovimentacao(req.params.id, id_funcionario);
+            res.json(resultado);
+        } catch (erro) {
+            res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
+        }
+    }
 }
 
 module.exports = new MovimentacaoEstoqueController();

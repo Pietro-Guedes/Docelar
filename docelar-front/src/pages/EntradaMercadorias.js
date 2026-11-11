@@ -105,7 +105,7 @@ export default function EntradaMercadorias() {
                 <div className="field">
                   <label className="label">Fornecedor</label>
                   <select className="select" value={nota.fornecedorId} onChange={set('fornecedorId')}>
-                    <option value="">Selecione...</option>
+                    <option value="">Produção própria / sem fornecedor</option>
                     {fornecedores.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
                   </select>
                 </div>

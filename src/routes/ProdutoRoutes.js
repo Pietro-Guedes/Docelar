@@ -7,6 +7,7 @@ const produtoController = require('../controllers/ProdutoController');
 router.get('/', produtoController.listar);
 router.get('/:id', produtoController.buscarPorId);
 router.post('/', verificarToken, produtoController.cadastrar);
+router.put('/:id/status', verificarToken, produtoController.atualizarStatus);
 router.put('/:id', verificarToken, produtoController.atualizar);
 router.delete('/:id', verificarToken, produtoController.deletar);
 

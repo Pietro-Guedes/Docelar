@@ -25,7 +25,7 @@ export default function InventarioCategoria() {
   const { data, loading, error, reload } = useAsync(async () => {
     const [produtos, categorias] = await Promise.all([listarProdutos(), listarCategorias()]);
     const cat = categorias.find((c) => String(c.id) === String(categoria));
-    return { cat, produtos: produtos.filter((p) => String(p.categoriaId) === String(categoria)) };
+    return { cat, produtos: produtos.filter((p) => p.ativo !== false && String(p.categoriaId) === String(categoria)) };
   }, [categoria]);
 
   const nome = data?.cat?.nome || (loading ? '...' : 'Categoria');
@@ -41,7 +41,7 @@ export default function InventarioCategoria() {
     ),
   }, [nome]);
 
-  const produtos = data?.produtos || [];
+  const produtos = useMemo(() => data?.produtos || [], [data]);
   const lista = useMemo(() => (filtro ? produtos.filter((p) => statusDoProduto(p) === filtro) : produtos), [produtos, filtro]);
   const pag = usePaginacao(lista, 6);
 

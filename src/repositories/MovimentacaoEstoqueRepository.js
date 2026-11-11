@@ -6,8 +6,29 @@ class MovimentacaoEstoqueRepository {
         return rows;
     }
 
-    async findById(id) {
-        const [rows] = await pool.query('SELECT * FROM movimentacao_estoque WHERE id_movimentacao = ?', [id]);
+    async findById(id, executor = pool) {
+        const [rows] = await executor.query('SELECT * FROM movimentacao_estoque WHERE id_movimentacao = ?', [id]);
+        return rows[0];
+    }
+
+    async findByIdParaAtualizar(id, executor) {
+        const [rows] = await executor.query('SELECT * FROM movimentacao_estoque WHERE id_movimentacao = ? FOR UPDATE', [id]);
+        return rows[0];
+    }
+
+    async findByGrupoTroca(grupo, executor) {
+        const [rows] = await executor.query(
+            'SELECT * FROM movimentacao_estoque WHERE observacao LIKE ? ORDER BY id_movimentacao FOR UPDATE',
+            [`%GRUPO_TROCA:${grupo}%`]
+        );
+        return rows;
+    }
+
+    async findEstorno(id_movimentacao, executor) {
+        const [rows] = await executor.query(
+            'SELECT id_movimentacao FROM movimentacao_estoque WHERE observacao LIKE ? LIMIT 1',
+            [`%ESTORNO_MOVIMENTACAO:${id_movimentacao} ·%`]
+        );
         return rows[0];
     }
 

@@ -5,6 +5,7 @@ jest.mock('../../src/repositories/ProdutoRepository', () => ({
   update: jest.fn(),
   delete: jest.fn(),
   contarVinculos: jest.fn(),
+  atualizarAtivo: jest.fn(),
 }));
 
 const repo = require('../../src/repositories/ProdutoRepository');
@@ -140,6 +141,20 @@ describe('ProdutoService', () => {
       repo.contarVinculos.mockResolvedValue(0);
       await service.deletarProduto(1);
       expect(repo.delete).toHaveBeenCalledWith(1);
+    });
+
+    describe('atualizarStatusProduto', () => {
+      it('rejeita um status que não seja booleano', async () => {
+        await expect(service.atualizarStatusProduto(1, 'false')).rejects.toMatchObject({ status: 400 });
+        expect(repo.atualizarAtivo).not.toHaveBeenCalled();
+      });
+
+      it('preserva o produto e atualiza seu status reversível', async () => {
+        repo.findById.mockResolvedValue({ id_produto: 1 });
+        await service.atualizarStatusProduto(1, false);
+        expect(repo.atualizarAtivo).toHaveBeenCalledWith(1, false);
+        expect(repo.delete).not.toHaveBeenCalled();
+      });
     });
   });
 });

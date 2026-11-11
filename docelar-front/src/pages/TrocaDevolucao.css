@@ -25,3 +25,15 @@
 
 .td-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .td-status { background: rgba(246,219,146,.18); color: var(--cor-de-fundo); text-transform: none; }
+.td-modos { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.td-vencidos { margin-top: 24px; }
+.td-vencidos-grid { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(120px, .7fr) minmax(250px, 1.5fr) minmax(220px, 1.5fr); gap: 16px; align-items: end; }
+.td-vencidos-grid .td-modos { margin: 0; }
+.td-vencidos-grid .td-info { display: block; }
+.td-protocolo .row b { text-align: right; }
+
+@media (max-width: 1000px) { .td-vencidos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .td-vencidos-grid { grid-template-columns: 1fr; }
+  .td-protocolo .big { font-size: 30px; }
+}

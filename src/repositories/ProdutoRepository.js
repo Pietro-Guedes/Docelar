@@ -68,6 +68,11 @@ class ProdutoRepository {
         return Number(r0.total);
     }
 
+    async atualizarAtivo(id, ativo) {
+        const [result] = await pool.query('UPDATE produto SET ativo = ? WHERE id_produto = ?', [ativo ? 1 : 0, id]);
+        return result.affectedRows;
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM produto WHERE id_produto = ?', [id]);
         return result.affectedRows;

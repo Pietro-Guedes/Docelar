@@ -18,7 +18,7 @@ export default function AdicionarItem({ onAdd, modo = 'saida', atualizar = 0 }) 
   const [ativo, setAtivo] = useState(0);
 
   useEffect(() => {
-    listarProdutos().then(setProdutos).catch((e) => setErro(e.message)).finally(() => setCarregou(true));
+    listarProdutos().then((items) => setProdutos(items.filter((p) => p.ativo !== false))).catch((e) => setErro(e.message)).finally(() => setCarregou(true));
   }, [atualizar]);
 
   const rotulo = (p) => `${p.codigo} - ${p.nome}`;
