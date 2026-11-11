@@ -6,7 +6,7 @@ import { listarFuncionarios, salvarFuncionario, excluirFuncionario } from '../ap
 import { useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
 
-const VAZIO = { id: null, nome: '', email: '', senha: '', admin: false };
+const VAZIO = { id: null, nome: '', email: '', senha: '' };
 
 export default function Funcionarios() {
   usePageMeta({ breadcrumb: ['Cadastros', 'Funcionários'], title: 'Funcionários' });
@@ -112,7 +112,6 @@ export default function Funcionarios() {
           )}
         </section>
 
-        {(isAdmin || form.id) && (
         <form className="card" onSubmit={salvar} noValidate>
           <h3 className="section-title" style={{ marginBottom: 20 }}>
             <UserPlus size={18} /> {form.id ? 'Editar funcionário' : 'Novo funcionário'}
@@ -138,18 +137,11 @@ export default function Funcionarios() {
             </div>
             {erros.senha && <small className="campo-erro">{erros.senha}</small>}
           </div>
-          {isAdmin && !form.id && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 13 }}>
-              <input type="checkbox" checked={form.admin} onChange={(e) => setForm((f) => ({ ...f, admin: e.target.checked }))} />
-              Dar acesso de administrador
-            </label>
-          )}
           <div className="cad-botoes">
             {form.id && <button type="button" className="btn btn-ghost" onClick={() => { setForm(VAZIO); setErros({}); }}><X size={16} /> Cancelar</button>}
             <button className="btn btn-vinho btn-lg" disabled={salvando}><Save size={17} /> {salvando ? 'Salvando...' : form.id ? 'Salvar' : 'Cadastrar'}</button>
           </div>
         </form>
-        )}
       </div>
 
       <Feedback {...feedback.props} />

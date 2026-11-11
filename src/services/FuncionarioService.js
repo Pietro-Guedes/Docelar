@@ -19,7 +19,7 @@ class FuncionarioService {
   }
 
   async cadastrarFuncionario(dados) {
-    const { nome, email, senha, admin } = dados;
+    const { nome, email, senha } = dados;
     if (!nome || !email || !senha) {
       throw { status: 400, mensagem: "Nome, email e senha são obrigatórios" };
     }
@@ -36,7 +36,9 @@ class FuncionarioService {
       nome: nome.trim(),
       email: email.trim().toLowerCase(),
       senha_hash,
-      admin: admin === true || admin === 1 || admin === "1" ? 1 : 0,
+      // cadastro é público: nunca aceita "admin" vindo da requisição.
+      // Para promover alguém: UPDATE funcionario SET admin = 1 WHERE email = '...'
+      admin: 0,
     };
 
     const id = await FuncionarioRepository.create(novoFuncionario);
