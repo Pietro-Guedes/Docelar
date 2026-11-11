@@ -19,7 +19,7 @@ class FuncionarioService {
   }
 
   async cadastrarFuncionario(dados) {
-    const { nome, email, senha } = dados;
+    const { nome, email, senha, admin } = dados;
     if (!nome || !email || !senha) {
       throw { status: 400, mensagem: "Nome, email e senha são obrigatórios" };
     }
@@ -36,6 +36,7 @@ class FuncionarioService {
       nome: nome.trim(),
       email: email.trim().toLowerCase(),
       senha_hash,
+      admin: admin === true || admin === 1 || admin === "1" ? 1 : 0,
     };
 
     const id = await FuncionarioRepository.create(novoFuncionario);
@@ -70,7 +71,11 @@ class FuncionarioService {
       sucesso: true,
       mensagem: "Login realizado com sucesso",
       token,
-      funcionario: { id: funcionario.id_funcionario, nome: funcionario.nome },
+      funcionario: {
+        id: funcionario.id_funcionario,
+        nome: funcionario.nome,
+        admin: !!funcionario.admin,
+      },
     };
   }
 
@@ -117,8 +122,9 @@ class FuncionarioService {
 
   async deletarFuncionario(id, idLogado) {
     if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
-    if (Number(idLogado) !== Number(id)) {
-      throw { status: 403, mensagem: "Você só pode apagar o seu próprio cadastro" };
+    // a rota já exige admin; aqui só impede o admin de apagar a própria conta
+    if (Number(idLogado) === Number(id)) {
+      throw { status: 400, mensagem: "Você não pode apagar a sua própria conta" };
     }
     const existe = await FuncionarioRepository.findById(id);
     if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };

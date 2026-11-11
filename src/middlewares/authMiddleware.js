@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const FuncionarioRepository = require('../repositories/FuncionarioRepository');
 
 const verificarToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -25,7 +26,22 @@ const verificarToken = (req, res, next) => {
     }
 };
 
+// Deve vir depois de verificarToken. Consulta o banco a cada chamada, assim
+// remover o admin de alguém vale na hora (sem esperar o token expirar).
+const verificarAdmin = async (req, res, next) => {
+    try {
+        const funcionario = await FuncionarioRepository.findById(req.usuarioId);
+        if (!funcionario || !funcionario.admin) {
+            return res.status(403).json({ sucesso: false, mensagem: "Acesso restrito a administradores" });
+        }
+        return next();
+    } catch (err) {
+        return res.status(500).json({ sucesso: false, mensagem: "Erro ao verificar permissão" });
+    }
+};
+
 module.exports = {
-    verificarToken
+    verificarToken,
+    verificarAdmin
 };
 

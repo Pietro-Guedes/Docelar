@@ -17,7 +17,7 @@ export const limparCache = () => cache.clear();
 
 const toCategoria = (c) => ({ id: c.id_categoria, nome: c.nome_categoria ?? c.nome });
 const toFornecedor = (f) => ({ id: f.id_fornecedor, nome: f.nome, cnpj: f.cnpj || '', telefone: f.telefone || '', email: f.email || '' });
-const toFuncionario = (f) => ({ id: f.id_funcionario ?? f.id, nome: f.nome, email: f.email || '' });
+const toFuncionario = (f) => ({ id: f.id_funcionario ?? f.id, nome: f.nome, email: f.email || '', admin: !!f.admin });
 const toLote = (l) => ({
   id: l.id_estoque,
   produtoId: l.id_produto,
@@ -47,7 +47,7 @@ export async function getUsuarioLogado() {
   try {
     return toFuncionario(dados(await request(`/funcionario/${f.id}`)));
   } catch {
-    return { id: f.id, nome: f.nome, email: '' };
+    return { id: f.id, nome: f.nome, email: '', admin: !!f.admin };
   }
 }
 
@@ -92,7 +92,7 @@ export async function salvarFuncionario(f) {
     if (f.senha) body.senha = f.senha;
     return request(`/funcionario/${f.id}`, { method: 'PUT', body });
   }
-  return request('/funcionario', { method: 'POST', body: { nome: f.nome, email: f.email, senha: f.senha } });
+  return request('/funcionario', { method: 'POST', body: { nome: f.nome, email: f.email, senha: f.senha, admin: !!f.admin } });
 }
 
 export async function excluirFuncionario(id) {

@@ -6,12 +6,13 @@ import { listarFuncionarios, salvarFuncionario, excluirFuncionario } from '../ap
 import { useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
 
-const VAZIO = { id: null, nome: '', email: '', senha: '' };
+const VAZIO = { id: null, nome: '', email: '', senha: '', admin: false };
 
 export default function Funcionarios() {
   usePageMeta({ breadcrumb: ['Cadastros', 'Funcionários'], title: 'Funcionários' });
   const feedback = useFeedback();
   const { usuario } = useUsuario() || {};
+  const isAdmin = !!usuario?.admin;
   const { data, loading, error, reload } = useAsync(listarFuncionarios, []);
   const [form, setForm] = useState(VAZIO);
   const [verSenha, setVerSenha] = useState(false);
@@ -56,7 +57,7 @@ export default function Funcionarios() {
       await excluirFuncionario(f.id);
       reload();
     } catch (err) {
-      setErroGeral(`Não foi possível apagar: ${mensagemErro(err)} (ele pode ter produtos ou movimentações no nome dele).`);
+      setErroGeral(`Não foi possível apagar: ${mensagemErro(err)}`);
     }
   }
 
@@ -90,16 +91,17 @@ export default function Funcionarios() {
                         <div className="prod-cell strong">
                           <Avatar usuario={f} size={36} />
                           {f.nome}
+                          {f.admin && <span className="badge badge-creme">Admin</span>}
                           {usuario?.id === f.id && <span className="badge badge-ok">Você</span>}
                         </div>
                       </td>
                       <td>{f.email}</td>
                       <td className="num" style={{ whiteSpace: 'nowrap' }}>
                         {usuario?.id === f.id && (
-                          <>
-                            <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
-                            <button className="icon-btn danger" disabled title="Você não pode apagar a si mesmo" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
-                          </>
+                          <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
+                        )}
+                        {isAdmin && usuario?.id !== f.id && (
+                          <button className="icon-btn danger" onClick={() => setApagar(f)} aria-label={`Apagar ${f.nome}`}><Trash2 size={16} /></button>
                         )}
                       </td>
                     </tr>
@@ -110,6 +112,7 @@ export default function Funcionarios() {
           )}
         </section>
 
+        {(isAdmin || form.id) && (
         <form className="card" onSubmit={salvar} noValidate>
           <h3 className="section-title" style={{ marginBottom: 20 }}>
             <UserPlus size={18} /> {form.id ? 'Editar funcionário' : 'Novo funcionário'}
@@ -135,11 +138,18 @@ export default function Funcionarios() {
             </div>
             {erros.senha && <small className="campo-erro">{erros.senha}</small>}
           </div>
+          {isAdmin && !form.id && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, fontSize: 13 }}>
+              <input type="checkbox" checked={form.admin} onChange={(e) => setForm((f) => ({ ...f, admin: e.target.checked }))} />
+              Dar acesso de administrador
+            </label>
+          )}
           <div className="cad-botoes">
             {form.id && <button type="button" className="btn btn-ghost" onClick={() => { setForm(VAZIO); setErros({}); }}><X size={16} /> Cancelar</button>}
             <button className="btn btn-vinho btn-lg" disabled={salvando}><Save size={17} /> {salvando ? 'Salvando...' : form.id ? 'Salvar' : 'Cadastrar'}</button>
           </div>
         </form>
+        )}
       </div>
 
       <Feedback {...feedback.props} />
