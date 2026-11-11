@@ -46,6 +46,15 @@ class FuncionarioController {
         }
     }
 
+    async reativar(req, res) {
+        try {
+            const resultado = await FuncionarioService.reativarFuncionario(req.params.id);
+            res.json(resultado);
+        } catch (erro) {
+            res.status(erro.status || 500).json({ sucesso: false, mensagem: erro.mensagem || "Erro interno" });
+        }
+    }
+
     async login(req, res) {
         try {
             const {email, senha} =req.body

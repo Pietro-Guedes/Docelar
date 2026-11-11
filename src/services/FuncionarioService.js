@@ -158,6 +158,17 @@ class FuncionarioService {
     await FuncionarioRepository.desativar(id);
     return { sucesso: true, mensagem: "Funcionário desativado com sucesso" };
   }
+
+  async reativarFuncionario(id) {
+    if (!id || isNaN(id)) throw { status: 400, mensagem: "ID inválido" };
+    const existe = await FuncionarioRepository.findById(id);
+    if (!existe) throw { status: 404, mensagem: "Funcionário não encontrado" };
+    if (Number(existe.ativo) !== 0) {
+      throw { status: 409, mensagem: "Este funcionário já está ativo" };
+    }
+    await FuncionarioRepository.reativar(id);
+    return { sucesso: true, mensagem: "Funcionário reativado com sucesso" };
+  }
 }
 
 module.exports = new FuncionarioService();

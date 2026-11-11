@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { UserPlus, Pencil, Trash2, Users, Save, X, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, UserCheck, Users, Save, X, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { Feedback, useFeedback, Confirm, Erro, Loading } from '../components/ui';
 import { Avatar, useUsuario, usePageMeta } from '../components/Layout';
-import { listarFuncionariosAtivos, salvarFuncionario, excluirFuncionario } from '../api';
+import { listarFuncionarios, salvarFuncionario, excluirFuncionario, reativarFuncionario } from '../api';
 import { useAsync, mensagemErro } from '../utils';
 import './Cadastros.css';
 
@@ -13,7 +13,10 @@ export default function Funcionarios() {
   const feedback = useFeedback();
   const { usuario } = useUsuario() || {};
   const isAdmin = !!usuario?.admin;
-  const { data, loading, error, reload } = useAsync(listarFuncionariosAtivos, []);
+  const { data: todos, loading, error, reload } = useAsync(listarFuncionarios, []);
+  // admin vê também os desativados (para poder reativar); os demais só veem quem está ativo
+  const data = todos && [...todos].filter((f) => isAdmin || f.ativo).sort((a, b) => Number(b.ativo) - Number(a.ativo));
+  const totalAtivos = todos ? todos.filter((f) => f.ativo).length : 0;
   const [form, setForm] = useState(VAZIO);
   const [verSenha, setVerSenha] = useState(false);
   const [erros, setErros] = useState({});
@@ -62,6 +65,16 @@ export default function Funcionarios() {
     }
   }
 
+  async function reativar(f) {
+    try {
+      await reativarFuncionario(f.id);
+      feedback.mostrar('Funcionário reativado');
+      reload();
+    } catch (err) {
+      setErroGeral(`Não foi possível reativar: ${mensagemErro(err)}`);
+    }
+  }
+
   return (
     <div className="page">
       <div>
@@ -76,7 +89,7 @@ export default function Funcionarios() {
         <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div className="mov-tabela-head" style={{ borderBottom: '1px solid var(--borda-suave)' }}>
             <h3 className="section-title"><Users size={18} /> Equipe</h3>
-            <span className="badge badge-creme">{data ? `${data.length} pessoas` : '...'}</span>
+            <span className="badge badge-creme">{todos ? `${totalAtivos} pessoas` : '...'}</span>
           </div>
           <Erro error={error} onRetry={reload} />
           {loading && !data && <Loading />}
@@ -87,12 +100,13 @@ export default function Funcionarios() {
                 <tbody>
                   {data.length === 0 && <tr><td colSpan={3} className="empty">Nenhum funcionário cadastrado.</td></tr>}
                   {data.map((f) => (
-                    <tr key={f.id} className={form.id === f.id ? 'linha-editando' : ''}>
+                    <tr key={f.id} className={form.id === f.id ? 'linha-editando' : ''} style={f.ativo ? undefined : { opacity: 0.6 }}>
                       <td>
                         <div className="prod-cell strong">
                           <Avatar usuario={f} size={36} />
                           {f.nome}
                           {f.admin && <span className="badge badge-creme">Admin</span>}
+                          {!f.ativo && <span className="badge badge-alerta">Desativado</span>}
                           {usuario?.id === f.id && <span className="badge badge-ok">Você</span>}
                         </div>
                       </td>
@@ -101,7 +115,10 @@ export default function Funcionarios() {
                         {usuario?.id === f.id && (
                           <button className="icon-btn" onClick={() => { setForm({ ...VAZIO, ...f, senha: '' }); setErros({}); }} aria-label={`Editar ${f.nome}`}><Pencil size={16} /></button>
                         )}
-                        {isAdmin && usuario?.id !== f.id && (
+                        {isAdmin && !f.ativo && (
+                          <button className="icon-btn" onClick={() => reativar(f)} title="Reativar funcionário" aria-label={`Reativar ${f.nome}`}><UserCheck size={16} /></button>
+                        )}
+                        {isAdmin && f.ativo && usuario?.id !== f.id && (
                           <button className="icon-btn danger" onClick={() => setApagar(f)} title="Desativar funcionário" aria-label={`Desativar ${f.nome}`}><Trash2 size={16} /></button>
                         )}
                       </td>

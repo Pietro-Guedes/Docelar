@@ -99,6 +99,11 @@ export async function salvarFuncionario(f) {
   return request('/funcionario', { method: 'POST', body: { nome: f.nome, email: f.email, senha: f.senha, admin: !!f.admin, codigoAdmin: f.codigoAdmin } });
 }
 
+export async function reativarFuncionario(id) {
+  limparCache();
+  return request(`/funcionario/${id}/reativar`, { method: 'PUT' });
+}
+
 export async function excluirFuncionario(id) {
   limparCache();
   return request(`/funcionario/${id}`, { method: 'DELETE' });

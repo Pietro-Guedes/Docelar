@@ -11,7 +11,8 @@ router.get('/', verificarToken, funcionarioController.listar);
 router.get('/:id', verificarToken, funcionarioController.buscarPorId);
 router.put('/:id', verificarToken, funcionarioController.atualizar);
 
-// só administrador exclui funcionários
+// só administrador desativa e reativa funcionários
 router.delete('/:id', verificarToken, verificarAdmin, funcionarioController.deletar);
+router.put('/:id/reativar', verificarToken, verificarAdmin, funcionarioController.reativar);
 
 module.exports = router;

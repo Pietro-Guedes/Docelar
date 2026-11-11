@@ -52,6 +52,11 @@ class FuncionarioRepository {
         return result.affectedRows;
     }
 
+    async reativar(id) {
+        const [result] = await pool.query('UPDATE funcionario SET ativo = 1 WHERE id_funcionario = ?', [id]);
+        return result.affectedRows;
+    }
+
     async delete(id) {
         const [result] = await pool.query('DELETE FROM funcionario WHERE id_funcionario = ?', [id]);
         return result.affectedRows;
